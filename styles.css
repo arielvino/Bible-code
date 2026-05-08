@@ -373,6 +373,28 @@ body {
     color: #718096;
 }
 
+/* ── Load more button ── */
+.load-more-btn {
+    display: block;
+    width: 100%;
+    margin-top: 16px;
+    padding: 12px;
+    border: 2px dashed #bee3f8;
+    border-radius: 12px;
+    background: #f7faff;
+    color: #2b6cb0;
+    font-size: 0.9rem;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.load-more-btn:hover {
+    background: #ebf4ff;
+    border-color: #90cdf4;
+}
+
 /* ── Individual result card ── */
 .result-card {
     border: 1px solid #e2e8f0;

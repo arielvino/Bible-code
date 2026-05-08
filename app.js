@@ -58,7 +58,26 @@ function StatCard({ label, value, colorClass }) {
     );
 }
 
+function buildRows(startPos, skip, letterCount) {
+    const text = window.BIBLE_TEXT;
+    const rows = [];
+    for (let xx = 0; xx < letterCount; xx++) {
+        const center = startPos + xx * skip;
+        const cells = [];
+        for (let ll = -15; ll < 16; ll++) {
+            const pos = center + ll;
+            cells.push({
+                char: (pos >= 0 && pos < text.length) ? text[pos] : '',
+                isMatch: ll === 0,
+            });
+        }
+        rows.push({ cells, centerPos: center });
+    }
+    return rows;
+}
+
 function ResultCard({ result, index }) {
+    const rows = buildRows(result.startPos, result.skip, result.letterCount);
     return (
         <div className="result-card">
             <div className="result-header">
@@ -68,7 +87,7 @@ function ResultCard({ result, index }) {
             <div className="result-table-wrapper">
                 <table className="result-table">
                     <tbody>
-                        {result.rows.map((row, ri) => {
+                        {rows.map((row, ri) => {
                             const loc = lookupLocation(row.centerPos);
                             return (
                                 <tr key={ri}>
@@ -103,6 +122,7 @@ function App() {
     const [groupBy, setGroupBy] = useState('skip');
     const [sortBy, setSortBy] = useState('position');
     const [sortOrder, setSortOrder] = useState('asc');
+    const [visibleCount, setVisibleCount] = useState(50);
     const searchIdRef = useRef(0);
     const workersRef = useRef([]);
 
@@ -122,6 +142,7 @@ function App() {
         setResultsMap(null);
         setStats(null);
         setProgress(0);
+        setVisibleCount(50);
 
         const text = window.BIBLE_TEXT;
         const attempts = calcAttempts(asked, text, firstSkip, lastSkip);
@@ -341,22 +362,36 @@ function App() {
                             </div>
                         </div>
 
-                        {groupBy === 'skip' ? (
-                            groups.map(({ skip, items }) => (
-                                <div key={skip} className="skip-group-section">
-                                    <div className="skip-group-header">
-                                        <span>דילוג {skip}</span>
-                                        <span className="skip-group-count">{items.length} תוצאות</span>
+                        {groupBy === 'skip' ? (() => {
+                            let rendered = 0;
+                            const sections = [];
+                            for (const { skip, items } of groups) {
+                                if (rendered >= visibleCount) break;
+                                const slice = items.slice(0, visibleCount - rendered);
+                                rendered += slice.length;
+                                sections.push(
+                                    <div key={skip} className="skip-group-section">
+                                        <div className="skip-group-header">
+                                            <span>דילוג {skip}</span>
+                                            <span className="skip-group-count">{items.length} תוצאות</span>
+                                        </div>
+                                        {slice.map((result, i) => (
+                                            <ResultCard key={result.key} result={result} index={i} />
+                                        ))}
                                     </div>
-                                    {items.map((result, i) => (
-                                        <ResultCard key={result.key} result={result} index={i} />
-                                    ))}
-                                </div>
-                            ))
-                        ) : (
-                            resultsList.map((result, i) => (
+                                );
+                            }
+                            return sections;
+                        })() : (
+                            resultsList.slice(0, visibleCount).map((result, i) => (
                                 <ResultCard key={result.key} result={result} index={i} />
                             ))
+                        )}
+
+                        {visibleCount < totalResults && (
+                            <button className="load-more-btn" onClick={() => setVisibleCount(v => v + 50)}>
+                                הצג עוד ({totalResults - visibleCount} נותרו)
+                            </button>
                         )}
                     </>
                 )}

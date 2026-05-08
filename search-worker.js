@@ -12,21 +12,9 @@ self.onmessage = function(e) {
                 if (text[i + xx * y] !== asked[xx]) { match = false; break; }
             }
             if (match) {
-                const rows = [];
-                for (let xx = 0; xx < x; xx++) {
-                    const center = i + xx * y;
-                    const cells = [];
-                    for (let ll = -15; ll < 16; ll++) {
-                        const pos = center + ll;
-                        cells.push({
-                            char: (pos >= 0 && pos < text.length) ? text[pos] : '',
-                            isMatch: ll === 0,
-                        });
-                    }
-                    rows.push({ cells, centerPos: center });
-                }
                 const key = i + '_' + y;
-                results[key] = { key, skip: y, startPos: i, rows };
+                // Return only coordinates — cell data is built on the main thread at render time
+                results[key] = { key, skip: y, startPos: i, letterCount: x };
             }
         }
     }
