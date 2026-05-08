@@ -24,31 +24,39 @@ body {
 
 /* ── Header ── */
 .app-header {
-    background: linear-gradient(135deg, #2d3a8c 0%, #6b21a8 100%);
+    background: linear-gradient(135deg, #1a2a4a 0%, #2d4a7a 100%);
     border-radius: 20px;
-    padding: 36px 24px 28px;
+    padding: 32px 28px 24px;
     text-align: center;
     color: white;
-    box-shadow: 0 8px 24px rgba(45, 58, 140, 0.35);
-}
-
-.header-icon {
-    font-size: 2.2rem;
-    margin-bottom: 8px;
-    opacity: 0.9;
+    box-shadow: 0 8px 24px rgba(20, 40, 80, 0.35);
 }
 
 .app-header h1 {
-    font-size: 2rem;
+    font-size: 1.9rem;
     font-weight: 700;
-    letter-spacing: 0.03em;
-    margin-bottom: 6px;
+    letter-spacing: 0.02em;
+    margin-bottom: 10px;
 }
 
 .app-subtitle {
     font-size: 0.95rem;
-    opacity: 0.75;
+    opacity: 0.85;
     font-weight: 400;
+    line-height: 1.6;
+    margin-bottom: 14px;
+}
+
+.header-note {
+    display: inline-block;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-size: 0.82rem;
+    opacity: 0.8;
+    line-height: 1.5;
+    direction: rtl;
 }
 
 /* ── Card base ── */
@@ -328,13 +336,12 @@ body {
 /* ── Context table ── */
 .result-table-wrapper {
     overflow-x: auto;
-    padding: 14px 10px;
+    padding: 10px 10px;
     direction: ltr; /* scrollbar on right side */
 }
 
 .result-table {
     border-collapse: collapse;
-    margin: 0 auto;
     direction: rtl; /* Hebrew right-to-left cell order */
 }
 
@@ -358,4 +365,34 @@ body {
 
 .context-cell {
     background: white;
+}
+
+/* ── Per-row location label ── */
+.location-cell {
+    position: sticky;
+    right: 0;           /* sticks to the RTL start edge while table scrolls */
+    background: #f0f4f8;
+    border: 1px solid #cbd5e0 !important;
+    padding: 0 10px !important;
+    white-space: nowrap;
+    width: auto !important;
+    min-width: 120px;
+    font-size: 0.75rem;
+    direction: rtl;
+    z-index: 1;
+}
+
+.loc-book {
+    font-weight: 700;
+    color: #2b4c8c;
+}
+
+.loc-dot {
+    color: #a0aec0;
+    margin: 0 4px;
+}
+
+.loc-parasha {
+    color: #553c9a;
+    font-weight: 600;
 }
