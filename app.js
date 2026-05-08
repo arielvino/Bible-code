@@ -1,4 +1,4 @@
-const { useState, useCallback } = React;
+const { useState, useCallback, useRef, useMemo } = React;
 
 const FINAL_FORMS = { 'ך': 'כ', 'ם': 'מ', 'ן': 'נ', 'ף': 'פ', 'ץ': 'צ' };
 const VALID_LETTERS = new Set('אבגדהוזחטיכלמנסעפצקרשת');
@@ -12,7 +12,6 @@ function normalizeWord(input) {
     return result;
 }
 
-// Binary-search BIBLE_INDEX (sorted by pos) → returns the parasha entry covering `pos`
 function lookupLocation(pos) {
     const idx = window.BIBLE_INDEX;
     let lo = 0, hi = idx.length - 1;
@@ -48,37 +47,6 @@ function calcAttempts(asked, text, firstSkip, lastSkip) {
         r += text.length - y * (x - 1);
     }
     return r;
-}
-
-function doSearch(asked, text, firstSkip, lastSkip) {
-    const x = asked.length;
-    const results = [];
-    const maxSkip = Math.min(lastSkip, (text.length - 1) / (x - 1));
-    for (let y = firstSkip; y <= maxSkip; y++) {
-        for (let i = 0; i < text.length - y * (x - 1); i++) {
-            let match = true;
-            for (let xx = 0; xx < x; xx++) {
-                if (text[i + xx * y] !== asked[xx]) { match = false; break; }
-            }
-            if (match) {
-                const rows = [];
-                for (let xx = 0; xx < x; xx++) {
-                    const center = i + xx * y;
-                    const cells = [];
-                    for (let ll = -15; ll < 16; ll++) {
-                        const pos = center + ll;
-                        cells.push({
-                            char: (pos >= 0 && pos < text.length) ? text[pos] : '',
-                            isMatch: ll === 0,
-                        });
-                    }
-                    rows.push({ cells, centerPos: center });
-                }
-                results.push({ skip: y, rows });
-            }
-        }
-    }
-    return results;
 }
 
 function StatCard({ label, value, colorClass }) {
@@ -128,44 +96,133 @@ function App() {
     const [word, setWord] = useState('');
     const [firstSkip, setFirstSkip] = useState(2);
     const [lastSkip, setLastSkip] = useState(100);
-    const [results, setResults] = useState(null);
+    const [resultsMap, setResultsMap] = useState(null);
     const [stats, setStats] = useState(null);
     const [isSearching, setIsSearching] = useState(false);
+    const [progress, setProgress] = useState(0);
+    const [groupBy, setGroupBy] = useState('skip');
+    const [sortBy, setSortBy] = useState('position');
+    const [sortOrder, setSortOrder] = useState('asc');
+    const searchIdRef = useRef(0);
+    const workersRef = useRef([]);
+
+    const cancelWorkers = () => {
+        workersRef.current.forEach(w => w.terminate());
+        workersRef.current = [];
+    };
 
     const handleSearch = useCallback(() => {
         const asked = normalizeWord(word);
         if (!asked) return;
 
+        cancelWorkers();
+        const searchId = ++searchIdRef.current;
+
         setIsSearching(true);
-        setResults(null);
+        setResultsMap(null);
         setStats(null);
+        setProgress(0);
 
-        setTimeout(() => {
-            const text = window.BIBLE_TEXT;
-            const attempts = calcAttempts(asked, text, firstSkip, lastSkip);
-            const options = calcOptions(asked, text);
+        const text = window.BIBLE_TEXT;
+        const attempts = calcAttempts(asked, text, firstSkip, lastSkip);
+        const options = calcOptions(asked, text);
 
-            let probability;
-            if (options === 0) {
-                probability = 'N/A';
-            } else if (attempts >= options) {
-                probability = (attempts / options).toFixed(2);
-            } else {
-                probability = '1 / ' + (options / attempts).toFixed(2);
-            }
+        let probability;
+        if (options === 0) {
+            probability = 'N/A';
+        } else if (attempts >= options) {
+            probability = (attempts / options).toFixed(2);
+        } else {
+            probability = '1 / ' + (options / attempts).toFixed(2);
+        }
 
-            const searchResults = doSearch(asked, text, firstSkip, lastSkip);
+        const x = asked.length;
+        const maxSkip = Math.min(lastSkip, Math.floor((text.length - 1) / (x - 1)));
+        const totalSkips = Math.max(0, maxSkip - firstSkip + 1);
 
-            setStats({
-                probability,
-                totalResults: searchResults.length,
-                rarity: options === 0 ? 'N/A' : '1 / ' + options.toFixed(0),
-                attempts,
-            });
-            setResults(searchResults);
+        if (totalSkips === 0) {
+            setStats({ probability, totalResults: 0, rarity: options === 0 ? 'N/A' : '1 / ' + options.toFixed(0), attempts });
+            setResultsMap({});
             setIsSearching(false);
-        }, 50);
+            return;
+        }
+
+        const numWorkers = Math.min(navigator.hardwareConcurrency || 4, 8);
+        const skipsPerWorker = Math.ceil(totalSkips / numWorkers);
+        const workerUrl = new URL('search-worker.js', window.location.href).href;
+
+        const merged = {};
+        let finishedWorkers = 0;
+        let doneSkips = 0;
+        const spawnedWorkers = [];
+
+        for (let w = 0; w < numWorkers; w++) {
+            const wFirstSkip = firstSkip + w * skipsPerWorker;
+            const wLastSkip = Math.min(wFirstSkip + skipsPerWorker - 1, maxSkip);
+            if (wFirstSkip > maxSkip) break;
+
+            const worker = new Worker(workerUrl);
+            spawnedWorkers.push(worker);
+
+            const assignedSkips = wLastSkip - wFirstSkip + 1;
+
+            worker.onmessage = (e) => {
+                if (searchIdRef.current !== searchId) return;
+
+                Object.assign(merged, e.data);
+                doneSkips += assignedSkips;
+                finishedWorkers++;
+                setProgress(Math.round((doneSkips / totalSkips) * 100));
+
+                if (finishedWorkers === spawnedWorkers.length) {
+                    setStats({
+                        probability,
+                        totalResults: Object.keys(merged).length,
+                        rarity: options === 0 ? 'N/A' : '1 / ' + options.toFixed(0),
+                        attempts,
+                    });
+                    setResultsMap({ ...merged });
+                    setIsSearching(false);
+                    workersRef.current = [];
+                }
+            };
+
+            worker.onerror = (err) => {
+                console.error('Worker error:', err);
+            };
+
+            worker.postMessage({ asked, text, firstSkip: wFirstSkip, lastSkip: wLastSkip });
+        }
+
+        workersRef.current = spawnedWorkers;
     }, [word, firstSkip, lastSkip]);
+
+    const resultsList = useMemo(() => {
+        if (!resultsMap) return [];
+        const arr = Object.values(resultsMap);
+        arr.sort((a, b) => {
+            const primary = sortBy === 'skip'
+                ? a.skip - b.skip
+                : a.startPos - b.startPos;
+            if (primary !== 0) return sortOrder === 'asc' ? primary : -primary;
+            // secondary sort always by position
+            return a.startPos - b.startPos;
+        });
+        return arr;
+    }, [resultsMap, sortBy, sortOrder]);
+
+    const groups = useMemo(() => {
+        if (groupBy !== 'skip') return null;
+        const map = new Map();
+        for (const r of resultsList) {
+            if (!map.has(r.skip)) map.set(r.skip, []);
+            map.get(r.skip).push(r);
+        }
+        return Array.from(map.entries()).map(([skip, items]) => ({ skip, items }));
+    }, [resultsList, groupBy]);
+
+    const hasResults = resultsMap !== null;
+    const totalResults = hasResults ? resultsList.length : 0;
 
     return (
         <div className="app-container">
@@ -226,7 +283,7 @@ function App() {
                     disabled={isSearching || !word.trim()}
                 >
                     {isSearching
-                        ? <span className="btn-content"><span className="btn-spinner"></span>מחפש...</span>
+                        ? <span className="btn-content"><span className="btn-spinner"></span>מחפש... {progress}%</span>
                         : <span className="btn-content">חיפוש</span>
                     }
                 </button>
@@ -245,32 +302,62 @@ function App() {
                 {isSearching && (
                     <div className="state-placeholder">
                         <div className="large-spinner"></div>
-                        <p>מחפש בתורה...</p>
+                        <p>מחפש בתורה... {progress}%</p>
                     </div>
                 )}
 
-                {!isSearching && results === null && (
+                {!isSearching && !hasResults && (
                     <div className="state-placeholder muted">
                         <div className="placeholder-icon">📖</div>
                         <p>הכנס מילה ולחץ על חיפוש</p>
                     </div>
                 )}
 
-                {!isSearching && results !== null && results.length === 0 && (
+                {!isSearching && hasResults && totalResults === 0 && (
                     <div className="state-placeholder">
                         <div className="placeholder-icon">🔎</div>
                         <p className="no-results-text">לא נמצאו תוצאות</p>
                     </div>
                 )}
 
-                {!isSearching && results && results.length > 0 && (
+                {!isSearching && hasResults && totalResults > 0 && (
                     <>
                         <div className="results-header">
-                            <span className="results-count-badge">{results.length} תוצאות</span>
+                            <span className="results-count-badge">{totalResults} תוצאות</span>
+                            <div className="sort-controls">
+                                <label className="ctrl-label">קיבוץ:</label>
+                                <select className="ctrl-select" value={groupBy} onChange={e => setGroupBy(e.target.value)}>
+                                    <option value="skip">לפי דילוג</option>
+                                    <option value="none">ללא קיבוץ</option>
+                                </select>
+                                <label className="ctrl-label">מיון:</label>
+                                <select className="ctrl-select" value={sortBy} onChange={e => setSortBy(e.target.value)}>
+                                    <option value="position">לפי מיקום</option>
+                                    <option value="skip">לפי דילוג</option>
+                                </select>
+                                <button className="ctrl-order-btn" title={sortOrder === 'asc' ? 'סדר עולה' : 'סדר יורד'} onClick={() => setSortOrder(o => o === 'asc' ? 'desc' : 'asc')}>
+                                    {sortOrder === 'asc' ? '↑' : '↓'}
+                                </button>
+                            </div>
                         </div>
-                        {results.map((result, i) => (
-                            <ResultCard key={i} result={result} index={i} />
-                        ))}
+
+                        {groupBy === 'skip' ? (
+                            groups.map(({ skip, items }) => (
+                                <div key={skip} className="skip-group-section">
+                                    <div className="skip-group-header">
+                                        <span>דילוג {skip}</span>
+                                        <span className="skip-group-count">{items.length} תוצאות</span>
+                                    </div>
+                                    {items.map((result, i) => (
+                                        <ResultCard key={result.key} result={result} index={i} />
+                                    ))}
+                                </div>
+                            ))
+                        ) : (
+                            resultsList.map((result, i) => (
+                                <ResultCard key={result.key} result={result} index={i} />
+                            ))
+                        )}
                     </>
                 )}
             </div>
