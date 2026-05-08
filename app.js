@@ -123,6 +123,7 @@ function App() {
     const [sortBy, setSortBy] = useState('position');
     const [sortOrder, setSortOrder] = useState('asc');
     const [visibleCount, setVisibleCount] = useState(50);
+    const [collapsedKeys, setCollapsedKeys] = useState(new Set());
     const searchIdRef = useRef(0);
     const workersRef = useRef([]);
 
@@ -143,6 +144,7 @@ function App() {
         setStats(null);
         setProgress(0);
         setVisibleCount(50);
+        setCollapsedKeys(new Set());
 
         const text = window.BIBLE_TEXT;
         const attempts = calcAttempts(asked, text, firstSkip, lastSkip);
@@ -232,15 +234,44 @@ function App() {
         return arr;
     }, [resultsMap, sortBy, sortOrder]);
 
-    const groups = useMemo(() => {
+    const skipGroups = useMemo(() => {
         if (groupBy !== 'skip') return null;
         const map = new Map();
         for (const r of resultsList) {
             if (!map.has(r.skip)) map.set(r.skip, []);
             map.get(r.skip).push(r);
         }
-        return Array.from(map.entries()).map(([skip, items]) => ({ skip, items }));
+        return Array.from(map.entries()).map(([skip, items]) => ({ key: 's_' + skip, skip, items }));
     }, [resultsList, groupBy]);
+
+    const locationGroups = useMemo(() => {
+        if (groupBy !== 'location') return null;
+        const bookMap = new Map();
+        for (const r of resultsList) {
+            const loc = lookupLocation(r.startPos);
+            if (!bookMap.has(loc.book)) bookMap.set(loc.book, new Map());
+            const parashaMap = bookMap.get(loc.book);
+            if (!parashaMap.has(loc.parasha)) parashaMap.set(loc.parasha, []);
+            parashaMap.get(loc.parasha).push(r);
+        }
+        return Array.from(bookMap.entries()).map(([book, parashaMap]) => ({
+            key: 'b_' + book,
+            book,
+            parashas: Array.from(parashaMap.entries()).map(([parasha, items]) => ({
+                key: 'p_' + book + '_' + parasha,
+                parasha,
+                items,
+            })),
+        }));
+    }, [resultsList, groupBy]);
+
+    const toggleCollapse = useCallback((key) => {
+        setCollapsedKeys(prev => {
+            const next = new Set(prev);
+            next.has(key) ? next.delete(key) : next.add(key);
+            return next;
+        });
+    }, []);
 
     const hasResults = resultsMap !== null;
     const totalResults = hasResults ? resultsList.length : 0;
@@ -349,6 +380,7 @@ function App() {
                                 <label className="ctrl-label">קיבוץ:</label>
                                 <select className="ctrl-select" value={groupBy} onChange={e => setGroupBy(e.target.value)}>
                                     <option value="skip">לפי דילוג</option>
+                                    <option value="location">לפי ספר / פרשה</option>
                                     <option value="none">ללא קיבוץ</option>
                                 </select>
                                 <label className="ctrl-label">מיון:</label>
@@ -362,33 +394,67 @@ function App() {
                             </div>
                         </div>
 
-                        {groupBy === 'skip' ? (() => {
+                        {groupBy === 'skip' && (() => {
                             let rendered = 0;
                             const sections = [];
-                            for (const { skip, items } of groups) {
+                            for (const { key, skip, items } of skipGroups) {
                                 if (rendered >= visibleCount) break;
-                                const slice = items.slice(0, visibleCount - rendered);
-                                rendered += slice.length;
+                                const collapsed = collapsedKeys.has(key);
+                                const slice = collapsed ? [] : items.slice(0, visibleCount - rendered);
+                                rendered += collapsed ? 0 : slice.length;
                                 sections.push(
-                                    <div key={skip} className="skip-group-section">
-                                        <div className="skip-group-header">
+                                    <div key={key} className="skip-group-section">
+                                        <div className="skip-group-header collapsible" onClick={() => toggleCollapse(key)}>
+                                            <span className="collapse-arrow">{collapsed ? '▶' : '▼'}</span>
                                             <span>דילוג {skip}</span>
                                             <span className="skip-group-count">{items.length} תוצאות</span>
                                         </div>
-                                        {slice.map((result, i) => (
+                                        {!collapsed && slice.map((result, i) => (
                                             <ResultCard key={result.key} result={result} index={i} />
                                         ))}
                                     </div>
                                 );
                             }
                             return sections;
-                        })() : (
+                        })()}
+
+                        {groupBy === 'location' && locationGroups.map(({ key: bookKey, book, parashas }) => {
+                            const bookCollapsed = collapsedKeys.has(bookKey);
+                            return (
+                                <div key={bookKey} className="book-group-section">
+                                    <div className="book-group-header collapsible" onClick={() => toggleCollapse(bookKey)}>
+                                        <span className="collapse-arrow">{bookCollapsed ? '▶' : '▼'}</span>
+                                        <span className="loc-book-label">{book}</span>
+                                        <span className="skip-group-count">
+                                            {parashas.reduce((s, p) => s + p.items.length, 0)} תוצאות
+                                        </span>
+                                    </div>
+                                    {!bookCollapsed && parashas.map(({ key: pKey, parasha, items }) => {
+                                        const pCollapsed = collapsedKeys.has(pKey);
+                                        return (
+                                            <div key={pKey} className="parasha-group-section">
+                                                <div className="parasha-group-header collapsible" onClick={() => toggleCollapse(pKey)}>
+                                                    <span className="collapse-arrow">{pCollapsed ? '▶' : '▼'}</span>
+                                                    <span>{parasha}</span>
+                                                    <span className="skip-group-count">{items.length} תוצאות</span>
+                                                </div>
+                                                {!pCollapsed && items.map((result, i) => (
+                                                    <ResultCard key={result.key} result={result} index={i} />
+                                                ))}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            );
+                        })}
+
+                        {groupBy === 'none' && (
                             resultsList.slice(0, visibleCount).map((result, i) => (
                                 <ResultCard key={result.key} result={result} index={i} />
                             ))
                         )}
 
-                        {visibleCount < totalResults && (
+                        {groupBy === 'none' && visibleCount < totalResults && (
                             <button className="load-more-btn" onClick={() => setVisibleCount(v => v + 50)}>
                                 הצג עוד ({totalResults - visibleCount} נותרו)
                             </button>
