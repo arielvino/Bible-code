@@ -198,22 +198,24 @@ function App() {
                     <div className="form-group skip-group">
                         <label className="form-label">דילוג מינימלי</label>
                         <input
-                            type="number"
+                            type="text"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
                             className="skip-input"
                             value={firstSkip}
                             onChange={e => setFirstSkip(Math.max(2, parseInt(e.target.value) || 2))}
-                            min="2"
                         />
                     </div>
                     <div className="skip-separator">—</div>
                     <div className="form-group skip-group">
                         <label className="form-label">דילוג מקסימלי</label>
                         <input
-                            type="number"
+                            type="text"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
                             className="skip-input"
                             value={lastSkip}
                             onChange={e => setLastSkip(Math.max(2, parseInt(e.target.value) || 2))}
-                            min="2"
                         />
                     </div>
                 </div>
