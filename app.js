@@ -1,6 +1,5 @@
 const { useState, useCallback } = React;
 
-// Map final Hebrew letter forms to their standard form
 const FINAL_FORMS = { 'ך': 'כ', 'ם': 'מ', 'ן': 'נ', 'ף': 'פ', 'ץ': 'צ' };
 const VALID_LETTERS = new Set('אבגדהוזחטיכלמנסעפצקרשת');
 
@@ -13,7 +12,18 @@ function normalizeWord(input) {
     return result;
 }
 
-// Returns 1 / (probability of the word appearing at any given position)
+// Binary-search BIBLE_INDEX (sorted by pos) → returns the parasha entry covering `pos`
+function lookupLocation(pos) {
+    const idx = window.BIBLE_INDEX;
+    let lo = 0, hi = idx.length - 1;
+    while (lo < hi) {
+        const mid = (lo + hi + 1) >> 1;
+        if (idx[mid].pos <= pos) lo = mid;
+        else hi = mid - 1;
+    }
+    return idx[lo];
+}
+
 function calcOptions(asked, text) {
     if (!text.length) return 0;
     let d = 1;
@@ -54,15 +64,15 @@ function doSearch(asked, text, firstSkip, lastSkip) {
                 const rows = [];
                 for (let xx = 0; xx < x; xx++) {
                     const center = i + xx * y;
-                    const row = [];
+                    const cells = [];
                     for (let ll = -15; ll < 16; ll++) {
                         const pos = center + ll;
-                        row.push({
+                        cells.push({
                             char: (pos >= 0 && pos < text.length) ? text[pos] : '',
                             isMatch: ll === 0,
                         });
                     }
-                    rows.push(row);
+                    rows.push({ cells, centerPos: center });
                 }
                 results.push({ skip: y, rows });
             }
@@ -90,15 +100,23 @@ function ResultCard({ result, index }) {
             <div className="result-table-wrapper">
                 <table className="result-table">
                     <tbody>
-                        {result.rows.map((row, ri) => (
-                            <tr key={ri}>
-                                {row.map((cell, ci) => (
-                                    <td key={ci} className={cell.isMatch ? 'match-cell' : 'context-cell'}>
-                                        {cell.char}
+                        {result.rows.map((row, ri) => {
+                            const loc = lookupLocation(row.centerPos);
+                            return (
+                                <tr key={ri}>
+                                    <td className="location-cell">
+                                        <span className="loc-book">{loc.book}</span>
+                                        <span className="loc-dot">·</span>
+                                        <span className="loc-parasha">{loc.parasha}</span>
                                     </td>
-                                ))}
-                            </tr>
-                        ))}
+                                    {row.cells.map((cell, ci) => (
+                                        <td key={ci} className={cell.isMatch ? 'match-cell' : 'context-cell'}>
+                                            {cell.char}
+                                        </td>
+                                    ))}
+                                </tr>
+                            );
+                        })}
                     </tbody>
                 </table>
             </div>
@@ -122,7 +140,6 @@ function App() {
         setResults(null);
         setStats(null);
 
-        // Defer heavy work so React can render the loading state first
         setTimeout(() => {
             const text = window.BIBLE_TEXT;
             const attempts = calcAttempts(asked, text, firstSkip, lastSkip);
@@ -153,9 +170,13 @@ function App() {
     return (
         <div className="app-container">
             <header className="app-header">
-                <div className="header-icon">✡</div>
-                <h1>דילוגי אותיות</h1>
-                <p className="app-subtitle">חיפוש מילים בדילוגי אותיות בתנ"ך</p>
+                <h1>בוחן קודי התורה</h1>
+                <p className="app-subtitle">
+                    חיפוש דילוגי אותיות בתורה וחישוב הסיכוי הסטטיסטי — כדי לבחון האם המופעים חריגים מבחינה מתמטית
+                </p>
+                <div className="header-note">
+                    כמות המופעים הצפויה = ניסיונות ÷ נדירות המילה. כשהיחס קרוב ל-1, הממצא אינו מפתיע סטטיסטית.
+                </div>
             </header>
 
             <div className="search-panel">
@@ -204,7 +225,7 @@ function App() {
                 >
                     {isSearching
                         ? <span className="btn-content"><span className="btn-spinner"></span>מחפש...</span>
-                        : <span className="btn-content">🔍 חיפוש</span>
+                        : <span className="btn-content">חיפוש</span>
                     }
                 </button>
             </div>
@@ -222,7 +243,7 @@ function App() {
                 {isSearching && (
                     <div className="state-placeholder">
                         <div className="large-spinner"></div>
-                        <p>מחפש בתנ"ך...</p>
+                        <p>מחפש בתורה...</p>
                     </div>
                 )}
 
