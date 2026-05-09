@@ -123,7 +123,7 @@ function App() {
     const [sortBy, setSortBy] = useState('position');
     const [sortOrder, setSortOrder] = useState('asc');
     const [visibleCount, setVisibleCount] = useState(50);
-    const [collapsedKeys, setCollapsedKeys] = useState(new Set());
+    const [expandedKeys, setExpandedKeys] = useState(new Set());
     const searchIdRef = useRef(0);
     const workersRef = useRef([]);
 
@@ -144,7 +144,7 @@ function App() {
         setStats(null);
         setProgress(0);
         setVisibleCount(50);
-        setCollapsedKeys(new Set());
+        setExpandedKeys(new Set());
 
         const text = window.BIBLE_TEXT;
         const attempts = calcAttempts(asked, text, firstSkip, lastSkip);
@@ -266,7 +266,7 @@ function App() {
     }, [resultsList, groupBy]);
 
     const toggleCollapse = useCallback((key) => {
-        setCollapsedKeys(prev => {
+        setExpandedKeys(prev => {
             const next = new Set(prev);
             next.has(key) ? next.delete(key) : next.add(key);
             return next;
@@ -295,7 +295,7 @@ function App() {
                         type="text"
                         className="word-input"
                         value={word}
-                        onChange={e => setWord(e.target.value)}
+                        onChange={e => setWord(normalizeWord(e.target.value))}
                         onKeyDown={e => e.key === 'Enter' && handleSearch()}
                         placeholder="לדוגמה: תורה"
                         dir="rtl"
@@ -399,7 +399,7 @@ function App() {
                             const sections = [];
                             for (const { key, skip, items } of skipGroups) {
                                 if (rendered >= visibleCount) break;
-                                const collapsed = collapsedKeys.has(key);
+                                const collapsed = !expandedKeys.has(key);
                                 const slice = collapsed ? [] : items.slice(0, visibleCount - rendered);
                                 rendered += collapsed ? 0 : slice.length;
                                 sections.push(
@@ -419,7 +419,7 @@ function App() {
                         })()}
 
                         {groupBy === 'location' && locationGroups.map(({ key: bookKey, book, parashas }) => {
-                            const bookCollapsed = collapsedKeys.has(bookKey);
+                            const bookCollapsed = !expandedKeys.has(bookKey);
                             return (
                                 <div key={bookKey} className="book-group-section">
                                     <div className="book-group-header collapsible" onClick={() => toggleCollapse(bookKey)}>
@@ -430,7 +430,7 @@ function App() {
                                         </span>
                                     </div>
                                     {!bookCollapsed && parashas.map(({ key: pKey, parasha, items }) => {
-                                        const pCollapsed = collapsedKeys.has(pKey);
+                                        const pCollapsed = !expandedKeys.has(pKey);
                                         return (
                                             <div key={pKey} className="parasha-group-section">
                                                 <div className="parasha-group-header collapsible" onClick={() => toggleCollapse(pKey)}>
