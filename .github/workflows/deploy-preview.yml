@@ -1,0 +1,43 @@
+name: Deploy Preview
+
+on:
+  push:
+    branches-ignore: [main]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Compute slug
+        id: slug
+        run: |
+          echo "value=$(echo '${{ github.ref_name }}' | sed 's/[^a-zA-Z0-9._-]/-/g')" >> $GITHUB_OUTPUT
+
+      - uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: .
+          destination_dir: preview/${{ steps.slug.outputs.value }}
+          keep_files: true
+          exclude_assets: '.github'
+
+      - name: Comment preview URL on PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SLUG: ${{ steps.slug.outputs.value }}
+          REPO: ${{ github.repository }}
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          PR=$(gh pr list --repo "$REPO" --head '${{ github.ref_name }}' --json number --jq '.[0].number // empty')
+          if [ -n "$PR" ]; then
+            URL="https://${OWNER}.github.io/$(echo $REPO | cut -d/ -f2)/preview/${SLUG}/"
+            BODY="**Preview deployment:** ${URL}"
+            gh pr comment "$PR" --repo "$REPO" --body "$BODY" --edit-last 2>/dev/null || \
+            gh pr comment "$PR" --repo "$REPO" --body "$BODY"
+          fi
