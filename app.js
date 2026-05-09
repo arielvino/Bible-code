@@ -120,9 +120,6 @@ function App() {
     const [isSearching, setIsSearching] = useState(false);
     const [progress, setProgress] = useState(0);
     const [groupBy, setGroupBy] = useState('skip');
-    const [sortBy, setSortBy] = useState('position');
-    const [sortOrder, setSortOrder] = useState('asc');
-    const [visibleCount, setVisibleCount] = useState(50);
     const [expandedKeys, setExpandedKeys] = useState(new Set());
     const searchIdRef = useRef(0);
     const workersRef = useRef([]);
@@ -143,7 +140,6 @@ function App() {
         setResultsMap(null);
         setStats(null);
         setProgress(0);
-        setVisibleCount(50);
         setExpandedKeys(new Set());
 
         const text = window.BIBLE_TEXT;
@@ -223,16 +219,9 @@ function App() {
     const resultsList = useMemo(() => {
         if (!resultsMap) return [];
         const arr = Object.values(resultsMap);
-        arr.sort((a, b) => {
-            const primary = sortBy === 'skip'
-                ? a.skip - b.skip
-                : a.startPos - b.startPos;
-            if (primary !== 0) return sortOrder === 'asc' ? primary : -primary;
-            // secondary sort always by position
-            return a.startPos - b.startPos;
-        });
+        arr.sort((a, b) => a.startPos - b.startPos);
         return arr;
-    }, [resultsMap, sortBy, sortOrder]);
+    }, [resultsMap]);
 
     const skipGroups = useMemo(() => {
         if (groupBy !== 'skip') return null;
@@ -378,45 +367,28 @@ function App() {
                             <span className="results-count-badge">{totalResults} תוצאות</span>
                             <div className="sort-controls">
                                 <label className="ctrl-label">קיבוץ:</label>
-                                <select className="ctrl-select" value={groupBy} onChange={e => setGroupBy(e.target.value)}>
+                                <select className="ctrl-select" value={groupBy} onChange={e => { setGroupBy(e.target.value); setExpandedKeys(new Set()); }}>
                                     <option value="skip">לפי דילוג</option>
                                     <option value="location">לפי ספר / פרשה</option>
-                                    <option value="none">ללא קיבוץ</option>
                                 </select>
-                                <label className="ctrl-label">מיון:</label>
-                                <select className="ctrl-select" value={sortBy} onChange={e => setSortBy(e.target.value)}>
-                                    <option value="position">לפי מיקום</option>
-                                    <option value="skip">לפי דילוג</option>
-                                </select>
-                                <button className="ctrl-order-btn" title={sortOrder === 'asc' ? 'סדר עולה' : 'סדר יורד'} onClick={() => setSortOrder(o => o === 'asc' ? 'desc' : 'asc')}>
-                                    {sortOrder === 'asc' ? '↑' : '↓'}
-                                </button>
                             </div>
                         </div>
 
-                        {groupBy === 'skip' && (() => {
-                            let rendered = 0;
-                            const sections = [];
-                            for (const { key, skip, items } of skipGroups) {
-                                if (rendered >= visibleCount) break;
-                                const collapsed = !expandedKeys.has(key);
-                                const slice = collapsed ? [] : items.slice(0, visibleCount - rendered);
-                                rendered += collapsed ? 0 : slice.length;
-                                sections.push(
-                                    <div key={key} className="skip-group-section">
-                                        <div className="skip-group-header collapsible" onClick={() => toggleCollapse(key)}>
-                                            <span className="collapse-arrow">{collapsed ? '▶' : '▼'}</span>
-                                            <span>דילוג {skip}</span>
-                                            <span className="skip-group-count">{items.length} תוצאות</span>
-                                        </div>
-                                        {!collapsed && slice.map((result, i) => (
-                                            <ResultCard key={result.key} result={result} index={i} />
-                                        ))}
+                        {groupBy === 'skip' && skipGroups.map(({ key, skip, items }) => {
+                            const collapsed = !expandedKeys.has(key);
+                            return (
+                                <div key={key} className="skip-group-section">
+                                    <div className="skip-group-header collapsible" onClick={() => toggleCollapse(key)}>
+                                        <span className="collapse-arrow">{collapsed ? '▶' : '▼'}</span>
+                                        <span>דילוג {skip}</span>
+                                        <span className="skip-group-count">{items.length} תוצאות</span>
                                     </div>
-                                );
-                            }
-                            return sections;
-                        })()}
+                                    {!collapsed && items.map((result, i) => (
+                                        <ResultCard key={result.key} result={result} index={i} />
+                                    ))}
+                                </div>
+                            );
+                        })}
 
                         {groupBy === 'location' && locationGroups.map(({ key: bookKey, book, parashas }) => {
                             const bookCollapsed = !expandedKeys.has(bookKey);
@@ -448,17 +420,6 @@ function App() {
                             );
                         })}
 
-                        {groupBy === 'none' && (
-                            resultsList.slice(0, visibleCount).map((result, i) => (
-                                <ResultCard key={result.key} result={result} index={i} />
-                            ))
-                        )}
-
-                        {groupBy === 'none' && visibleCount < totalResults && (
-                            <button className="load-more-btn" onClick={() => setVisibleCount(v => v + 50)}>
-                                הצג עוד ({totalResults - visibleCount} נותרו)
-                            </button>
-                        )}
                     </>
                 )}
             </div>
