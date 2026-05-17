@@ -59,6 +59,48 @@ body {
     direction: rtl;
 }
 
+.corpus-toggle {
+    display: inline-flex;
+    gap: 6px;
+    margin-top: 16px;
+    padding: 4px;
+    background: rgba(0, 0, 0, 0.25);
+    border-radius: 999px;
+    direction: rtl;
+}
+
+.corpus-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 8px 18px;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.75);
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+}
+
+.corpus-btn:hover {
+    color: white;
+}
+
+.corpus-btn.active {
+    background: white;
+    color: #1a2a4a;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+}
+
+.corpus-len {
+    font-size: 0.7rem;
+    font-weight: 400;
+    opacity: 0.75;
+}
+
 /* ── Card base ── */
 .search-panel,
 .results-panel {

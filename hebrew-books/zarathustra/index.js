@@ -1,0 +1,2 @@
+// Frischmann translation of Thus Spoke Zarathustra (Project Ben-Yehuda public domain)
+window.ZARATHUSTRA_INDEX = [{"pos":0,"parasha":"חלק ראשון","book":"כה אמר זרתוסטרא","bookEn":"Part One"},{"pos":65386,"parasha":"חלק שני","book":"כה אמר זרתוסטרא","bookEn":"Part Two"},{"pos":129712,"parasha":"חלק שלישי","book":"כה אמר זרתוסטרא","bookEn":"Part Three"},{"pos":207341,"parasha":"חלק רביעי ואחרון","book":"כה אמר זרתוסטרא","bookEn":"Part Four"}];
