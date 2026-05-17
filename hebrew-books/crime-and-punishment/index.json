@@ -1,0 +1,242 @@
+[
+  {
+    "pos": 0,
+    "chapter": "חלק ראשון – I",
+    "section": "חלק ראשון",
+    "sectionEn": "Part One"
+  },
+  {
+    "pos": 10385,
+    "chapter": "II",
+    "section": "חלק ראשון",
+    "sectionEn": "Part One"
+  },
+  {
+    "pos": 32850,
+    "chapter": "III",
+    "section": "חלק ראשון",
+    "sectionEn": "Part One"
+  },
+  {
+    "pos": 50445,
+    "chapter": "IV",
+    "section": "חלק ראשון",
+    "sectionEn": "Part One"
+  },
+  {
+    "pos": 66397,
+    "chapter": "V",
+    "section": "חלק ראשון",
+    "sectionEn": "Part One"
+  },
+  {
+    "pos": 79274,
+    "chapter": "VI",
+    "section": "חלק ראשון",
+    "sectionEn": "Part One"
+  },
+  {
+    "pos": 95425,
+    "chapter": "VII",
+    "section": "חלק ראשון",
+    "sectionEn": "Part One"
+  },
+  {
+    "pos": 109654,
+    "chapter": "חלק שני – I",
+    "section": "חלק שני",
+    "sectionEn": "Part Two"
+  },
+  {
+    "pos": 130346,
+    "chapter": "II",
+    "section": "חלק שני",
+    "sectionEn": "Part Two"
+  },
+  {
+    "pos": 143437,
+    "chapter": "III",
+    "section": "חלק שני",
+    "sectionEn": "Part Two"
+  },
+  {
+    "pos": 160382,
+    "chapter": "IV",
+    "section": "חלק שני",
+    "sectionEn": "Part Two"
+  },
+  {
+    "pos": 173323,
+    "chapter": "V",
+    "section": "חלק שני",
+    "sectionEn": "Part Two"
+  },
+  {
+    "pos": 184520,
+    "chapter": "VI",
+    "section": "חלק שני",
+    "sectionEn": "Part Two"
+  },
+  {
+    "pos": 207378,
+    "chapter": "VII",
+    "section": "חלק שני",
+    "sectionEn": "Part Two"
+  },
+  {
+    "pos": 229247,
+    "chapter": "חלק שלישי – I",
+    "section": "חלק שלישי",
+    "sectionEn": "Part Three"
+  },
+  {
+    "pos": 245565,
+    "chapter": "II",
+    "section": "חלק שלישי",
+    "sectionEn": "Part Three"
+  },
+  {
+    "pos": 260047,
+    "chapter": "III",
+    "section": "חלק שלישי",
+    "sectionEn": "Part Three"
+  },
+  {
+    "pos": 274678,
+    "chapter": "IV",
+    "section": "חלק שלישי",
+    "sectionEn": "Part Three"
+  },
+  {
+    "pos": 288161,
+    "chapter": "V",
+    "section": "חלק שלישי",
+    "sectionEn": "Part Three"
+  },
+  {
+    "pos": 324256,
+    "chapter": "חלק רביעי – I",
+    "section": "חלק רביעי",
+    "sectionEn": "Part Four"
+  },
+  {
+    "pos": 339636,
+    "chapter": "II",
+    "section": "חלק רביעי",
+    "sectionEn": "Part Four"
+  },
+  {
+    "pos": 354377,
+    "chapter": "III",
+    "section": "חלק רביעי",
+    "sectionEn": "Part Four"
+  },
+  {
+    "pos": 363730,
+    "chapter": "IV",
+    "section": "חלק רביעי",
+    "sectionEn": "Part Four"
+  },
+  {
+    "pos": 381320,
+    "chapter": "V",
+    "section": "חלק רביעי",
+    "sectionEn": "Part Four"
+  },
+  {
+    "pos": 404761,
+    "chapter": "VI",
+    "section": "חלק רביעי",
+    "sectionEn": "Part Four"
+  },
+  {
+    "pos": 413224,
+    "chapter": "חלק חמישי – I",
+    "section": "חלק חמישי",
+    "sectionEn": "Part Five"
+  },
+  {
+    "pos": 434291,
+    "chapter": "II",
+    "section": "חלק חמישי",
+    "sectionEn": "Part Five"
+  },
+  {
+    "pos": 451825,
+    "chapter": "III",
+    "section": "חלק חמישי",
+    "sectionEn": "Part Five"
+  },
+  {
+    "pos": 469421,
+    "chapter": "IV",
+    "section": "חלק חמישי",
+    "sectionEn": "Part Five"
+  },
+  {
+    "pos": 488408,
+    "chapter": "V",
+    "section": "חלק חמישי",
+    "sectionEn": "Part Five"
+  },
+  {
+    "pos": 504217,
+    "chapter": "חלק ששי – I",
+    "section": "חלק ששי",
+    "sectionEn": "Part Six"
+  },
+  {
+    "pos": 515989,
+    "chapter": "II",
+    "section": "חלק ששי",
+    "sectionEn": "Part Six"
+  },
+  {
+    "pos": 533580,
+    "chapter": "III",
+    "section": "חלק ששי",
+    "sectionEn": "Part Six"
+  },
+  {
+    "pos": 545537,
+    "chapter": "IV",
+    "section": "חלק ששי",
+    "sectionEn": "Part Six"
+  },
+  {
+    "pos": 559667,
+    "chapter": "V",
+    "section": "חלק ששי",
+    "sectionEn": "Part Six"
+  },
+  {
+    "pos": 576908,
+    "chapter": "VI",
+    "section": "חלק ששי",
+    "sectionEn": "Part Six"
+  },
+  {
+    "pos": 594082,
+    "chapter": "VII",
+    "section": "חלק ששי",
+    "sectionEn": "Part Six"
+  },
+  {
+    "pos": 604924,
+    "chapter": "VIII",
+    "section": "חלק ששי",
+    "sectionEn": "Part Six"
+  },
+  {
+    "pos": 616688,
+    "chapter": "אפילוג – I",
+    "section": "אפילוג",
+    "sectionEn": "Epilogue"
+  },
+  {
+    "pos": 627228,
+    "chapter": "II",
+    "section": "אפילוג",
+    "sectionEn": "Epilogue"
+  }
+]

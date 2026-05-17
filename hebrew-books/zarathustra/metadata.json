@@ -1,0 +1,16 @@
+{
+  "titleHe": "כה אמר סרתוסטרא",
+  "titleEn": "Thus Spoke Zarathustra",
+  "originalTitle": "Also sprach Zarathustra",
+  "originalLang": "de",
+  "author": "פרידריך ניטשה (Friedrich Nietzsche, 1844–1900)",
+  "translator": "דוד פרישמן (David Frischmann, 1859–1922)",
+  "sourceUrl": "https://benyehuda.org/read/3951",
+  "sourceProject": "Project Ben-Yehuda (https://benyehuda.org)",
+  "license": "Public domain",
+  "charCount": 295362,
+  "chapterCount": 4,
+  "uniqueLetters": 22,
+  "uniqueLettersList": "פתחדבריסוטאהנשלמעזכקצג",
+  "notes": "Raw Hebrew letters only (U+05D0..U+05EA), final forms normalized to regular forms (ך→כ, ם→מ, ן→נ, ף→פ, ץ→צ). All whitespace, punctuation, nikud, and cantillation stripped. Mirrors the format of bible-text.js in this repo."
+}

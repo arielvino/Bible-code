@@ -1,4 +1,4 @@
-const { useState, useCallback, useRef, useMemo } = React;
+const { useState, useCallback, useRef, useMemo, useEffect } = React;
 
 const FINAL_FORMS = { 'ך': 'כ', 'ם': 'מ', 'ן': 'נ', 'ף': 'פ', 'ץ': 'צ' };
 const VALID_LETTERS = new Set('אבגדהוזחטיכלמנסעפצקרשת');
@@ -12,8 +12,24 @@ function normalizeWord(input) {
     return result;
 }
 
-function lookupLocation(pos) {
-    const idx = window.BIBLE_INDEX;
+const CORPORA = {
+    torah: {
+        id: 'torah',
+        nameHe: 'תורה',
+        searchVerb: 'בתורה',
+        get text() { return window.BIBLE_TEXT; },
+        get index() { return window.BIBLE_INDEX; },
+    },
+    zarathustra: {
+        id: 'zarathustra',
+        nameHe: 'כה אמר זרתוסטרא',
+        searchVerb: 'בכה אמר זרתוסטרא',
+        get text() { return window.ZARATHUSTRA_TEXT; },
+        get index() { return window.ZARATHUSTRA_INDEX; },
+    },
+};
+
+function lookupLocation(idx, pos) {
     let lo = 0, hi = idx.length - 1;
     while (lo < hi) {
         const mid = (lo + hi + 1) >> 1;
@@ -58,8 +74,7 @@ function StatCard({ label, value, colorClass }) {
     );
 }
 
-function buildRows(startPos, skip, letterCount) {
-    const text = window.BIBLE_TEXT;
+function buildRows(text, startPos, skip, letterCount) {
     const rows = [];
     for (let xx = 0; xx < letterCount; xx++) {
         const center = startPos + xx * skip;
@@ -76,8 +91,8 @@ function buildRows(startPos, skip, letterCount) {
     return rows;
 }
 
-function ResultCard({ result, index }) {
-    const rows = buildRows(result.startPos, result.skip, result.letterCount);
+function ResultCard({ result, index, corpus }) {
+    const rows = buildRows(corpus.text, result.startPos, result.skip, result.letterCount);
     return (
         <div className="result-card">
             <div className="result-header">
@@ -88,7 +103,7 @@ function ResultCard({ result, index }) {
                 <table className="result-table">
                     <tbody>
                         {rows.map((row, ri) => {
-                            const loc = lookupLocation(row.centerPos);
+                            const loc = lookupLocation(corpus.index, row.centerPos);
                             return (
                                 <tr key={ri}>
                                     <td className="location-cell">
@@ -112,6 +127,8 @@ function ResultCard({ result, index }) {
 }
 
 function App() {
+    const [corpusId, setCorpusId] = useState('torah');
+    const corpus = CORPORA[corpusId];
     const [word, setWord] = useState('');
     const [firstSkip, setFirstSkip] = useState(2);
     const [lastSkip, setLastSkip] = useState(100);
@@ -142,7 +159,7 @@ function App() {
         setProgress(0);
         setExpandedKeys(new Set());
 
-        const text = window.BIBLE_TEXT;
+        const text = corpus.text;
         const attempts = calcAttempts(asked, text, firstSkip, lastSkip);
         const options = calcOptions(asked, text);
 
@@ -214,7 +231,22 @@ function App() {
         }
 
         workersRef.current = spawnedWorkers;
-    }, [word, firstSkip, lastSkip]);
+    }, [word, firstSkip, lastSkip, corpus]);
+
+    // Cancel any in-flight search and clear results when corpus changes
+    const prevCorpusRef = useRef(corpusId);
+    useEffect(() => {
+        if (prevCorpusRef.current !== corpusId) {
+            cancelWorkers();
+            searchIdRef.current++;
+            setIsSearching(false);
+            setResultsMap(null);
+            setStats(null);
+            setProgress(0);
+            setExpandedKeys(new Set());
+            prevCorpusRef.current = corpusId;
+        }
+    }, [corpusId]);
 
     const resultsList = useMemo(() => {
         if (!resultsMap) return [];
@@ -237,7 +269,7 @@ function App() {
         if (groupBy !== 'location') return null;
         const bookMap = new Map();
         for (const r of resultsList) {
-            const loc = lookupLocation(r.startPos);
+            const loc = lookupLocation(corpus.index, r.startPos);
             if (!bookMap.has(loc.book)) bookMap.set(loc.book, new Map());
             const parashaMap = bookMap.get(loc.book);
             if (!parashaMap.has(loc.parasha)) parashaMap.set(loc.parasha, []);
@@ -252,7 +284,7 @@ function App() {
                 items,
             })),
         }));
-    }, [resultsList, groupBy]);
+    }, [resultsList, groupBy, corpus]);
 
     const toggleCollapse = useCallback((key) => {
         setExpandedKeys(prev => {
@@ -268,12 +300,26 @@ function App() {
     return (
         <div className="app-container">
             <header className="app-header">
-                <h1>בוחן קודי התורה</h1>
+                <h1>בוחן קודי האותיות</h1>
                 <p className="app-subtitle">
-                    חיפוש דילוגי אותיות בתורה וחישוב הסיכוי הסטטיסטי — כדי לבחון האם המופעים חריגים מבחינה מתמטית
+                    חיפוש דילוגי אותיות {corpus.searchVerb} וחישוב הסיכוי הסטטיסטי — כדי לבחון האם המופעים חריגים מבחינה מתמטית
                 </p>
                 <div className="header-note">
                     כמות המופעים הצפויה = ניסיונות ÷ נדירות המילה. כשהיחס קרוב ל-1, הממצא אינו מפתיע סטטיסטית.
+                </div>
+                <div className="corpus-toggle" role="tablist" aria-label="בחירת ספר">
+                    {Object.values(CORPORA).map(c => (
+                        <button
+                            key={c.id}
+                            role="tab"
+                            aria-selected={corpusId === c.id}
+                            className={'corpus-btn' + (corpusId === c.id ? ' active' : '')}
+                            onClick={() => setCorpusId(c.id)}
+                        >
+                            {c.nameHe}
+                            <span className="corpus-len">{c.text.length.toLocaleString()} אותיות</span>
+                        </button>
+                    ))}
                 </div>
             </header>
 
@@ -343,7 +389,7 @@ function App() {
                 {isSearching && (
                     <div className="state-placeholder">
                         <div className="large-spinner"></div>
-                        <p>מחפש בתורה... {progress}%</p>
+                        <p>מחפש {corpus.searchVerb}... {progress}%</p>
                     </div>
                 )}
 
@@ -384,7 +430,7 @@ function App() {
                                         <span className="skip-group-count">{items.length} תוצאות</span>
                                     </div>
                                     {!collapsed && items.map((result, i) => (
-                                        <ResultCard key={result.key} result={result} index={i} />
+                                        <ResultCard key={result.key} result={result} index={i} corpus={corpus} />
                                     ))}
                                 </div>
                             );
@@ -411,7 +457,7 @@ function App() {
                                                     <span className="skip-group-count">{items.length} תוצאות</span>
                                                 </div>
                                                 {!pCollapsed && items.map((result, i) => (
-                                                    <ResultCard key={result.key} result={result} index={i} />
+                                                    <ResultCard key={result.key} result={result} index={i} corpus={corpus} />
                                                 ))}
                                             </div>
                                         );

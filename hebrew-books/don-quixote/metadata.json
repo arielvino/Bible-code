@@ -1,0 +1,16 @@
+{
+  "titleHe": "דון קישוט איש למנשא",
+  "titleEn": "Don Quixote",
+  "originalTitle": "Don Quixote de la Mancha",
+  "originalLang": "es",
+  "author": "מיגל דה סרוואנטס (Miguel de Cervantes Saavedra, 1547–1616)",
+  "translator": "חיים נחמן ביאליק (Hayim Nahman Bialik, 1873–1934)",
+  "sourceUrl": "https://benyehuda.org/read/11229",
+  "sourceProject": "Project Ben-Yehuda (https://benyehuda.org)",
+  "license": "Public domain",
+  "charCount": 347343,
+  "chapterCount": 45,
+  "uniqueLetters": 22,
+  "uniqueLettersList": "אישהבערקטנגלמכדוזצחתספ",
+  "notes": "Raw Hebrew letters only (U+05D0..U+05EA), final forms normalized to regular forms (ך→כ, ם→מ, ן→נ, ף→פ, ץ→צ). All whitespace, punctuation, nikud, and cantillation stripped. Mirrors the format of bible-text.js in this repo."
+}
