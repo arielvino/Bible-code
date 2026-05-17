@@ -58,7 +58,26 @@ function StatCard({ label, value, colorClass }) {
     );
 }
 
+function buildRows(startPos, skip, letterCount) {
+    const text = window.BIBLE_TEXT;
+    const rows = [];
+    for (let xx = 0; xx < letterCount; xx++) {
+        const center = startPos + xx * skip;
+        const cells = [];
+        for (let ll = -15; ll < 16; ll++) {
+            const pos = center + ll;
+            cells.push({
+                char: (pos >= 0 && pos < text.length) ? text[pos] : '',
+                isMatch: ll === 0,
+            });
+        }
+        rows.push({ cells, centerPos: center });
+    }
+    return rows;
+}
+
 function ResultCard({ result, index }) {
+    const rows = buildRows(result.startPos, result.skip, result.letterCount);
     return (
         <div className="result-card">
             <div className="result-header">
@@ -68,7 +87,7 @@ function ResultCard({ result, index }) {
             <div className="result-table-wrapper">
                 <table className="result-table">
                     <tbody>
-                        {result.rows.map((row, ri) => {
+                        {rows.map((row, ri) => {
                             const loc = lookupLocation(row.centerPos);
                             return (
                                 <tr key={ri}>
@@ -101,8 +120,7 @@ function App() {
     const [isSearching, setIsSearching] = useState(false);
     const [progress, setProgress] = useState(0);
     const [groupBy, setGroupBy] = useState('skip');
-    const [sortBy, setSortBy] = useState('position');
-    const [sortOrder, setSortOrder] = useState('asc');
+    const [expandedKeys, setExpandedKeys] = useState(new Set());
     const searchIdRef = useRef(0);
     const workersRef = useRef([]);
 
@@ -122,6 +140,7 @@ function App() {
         setResultsMap(null);
         setStats(null);
         setProgress(0);
+        setExpandedKeys(new Set());
 
         const text = window.BIBLE_TEXT;
         const attempts = calcAttempts(asked, text, firstSkip, lastSkip);
@@ -200,26 +219,48 @@ function App() {
     const resultsList = useMemo(() => {
         if (!resultsMap) return [];
         const arr = Object.values(resultsMap);
-        arr.sort((a, b) => {
-            const primary = sortBy === 'skip'
-                ? a.skip - b.skip
-                : a.startPos - b.startPos;
-            if (primary !== 0) return sortOrder === 'asc' ? primary : -primary;
-            // secondary sort always by position
-            return a.startPos - b.startPos;
-        });
+        arr.sort((a, b) => a.startPos - b.startPos);
         return arr;
-    }, [resultsMap, sortBy, sortOrder]);
+    }, [resultsMap]);
 
-    const groups = useMemo(() => {
+    const skipGroups = useMemo(() => {
         if (groupBy !== 'skip') return null;
         const map = new Map();
         for (const r of resultsList) {
             if (!map.has(r.skip)) map.set(r.skip, []);
             map.get(r.skip).push(r);
         }
-        return Array.from(map.entries()).map(([skip, items]) => ({ skip, items }));
+        return Array.from(map.entries()).map(([skip, items]) => ({ key: 's_' + skip, skip, items }));
     }, [resultsList, groupBy]);
+
+    const locationGroups = useMemo(() => {
+        if (groupBy !== 'location') return null;
+        const bookMap = new Map();
+        for (const r of resultsList) {
+            const loc = lookupLocation(r.startPos);
+            if (!bookMap.has(loc.book)) bookMap.set(loc.book, new Map());
+            const parashaMap = bookMap.get(loc.book);
+            if (!parashaMap.has(loc.parasha)) parashaMap.set(loc.parasha, []);
+            parashaMap.get(loc.parasha).push(r);
+        }
+        return Array.from(bookMap.entries()).map(([book, parashaMap]) => ({
+            key: 'b_' + book,
+            book,
+            parashas: Array.from(parashaMap.entries()).map(([parasha, items]) => ({
+                key: 'p_' + book + '_' + parasha,
+                parasha,
+                items,
+            })),
+        }));
+    }, [resultsList, groupBy]);
+
+    const toggleCollapse = useCallback((key) => {
+        setExpandedKeys(prev => {
+            const next = new Set(prev);
+            next.has(key) ? next.delete(key) : next.add(key);
+            return next;
+        });
+    }, []);
 
     const hasResults = resultsMap !== null;
     const totalResults = hasResults ? resultsList.length : 0;
@@ -243,7 +284,7 @@ function App() {
                         type="text"
                         className="word-input"
                         value={word}
-                        onChange={e => setWord(e.target.value)}
+                        onChange={e => setWord(normalizeWord(e.target.value))}
                         onKeyDown={e => e.key === 'Enter' && handleSearch()}
                         placeholder="לדוגמה: תורה"
                         dir="rtl"
@@ -326,38 +367,59 @@ function App() {
                             <span className="results-count-badge">{totalResults} תוצאות</span>
                             <div className="sort-controls">
                                 <label className="ctrl-label">קיבוץ:</label>
-                                <select className="ctrl-select" value={groupBy} onChange={e => setGroupBy(e.target.value)}>
+                                <select className="ctrl-select" value={groupBy} onChange={e => { setGroupBy(e.target.value); setExpandedKeys(new Set()); }}>
                                     <option value="skip">לפי דילוג</option>
-                                    <option value="none">ללא קיבוץ</option>
+                                    <option value="location">לפי ספר / פרשה</option>
                                 </select>
-                                <label className="ctrl-label">מיון:</label>
-                                <select className="ctrl-select" value={sortBy} onChange={e => setSortBy(e.target.value)}>
-                                    <option value="position">לפי מיקום</option>
-                                    <option value="skip">לפי דילוג</option>
-                                </select>
-                                <button className="ctrl-order-btn" title={sortOrder === 'asc' ? 'סדר עולה' : 'סדר יורד'} onClick={() => setSortOrder(o => o === 'asc' ? 'desc' : 'asc')}>
-                                    {sortOrder === 'asc' ? '↑' : '↓'}
-                                </button>
                             </div>
                         </div>
 
-                        {groupBy === 'skip' ? (
-                            groups.map(({ skip, items }) => (
-                                <div key={skip} className="skip-group-section">
-                                    <div className="skip-group-header">
+                        {groupBy === 'skip' && skipGroups.map(({ key, skip, items }) => {
+                            const collapsed = !expandedKeys.has(key);
+                            return (
+                                <div key={key} className="skip-group-section">
+                                    <div className="skip-group-header collapsible" onClick={() => toggleCollapse(key)}>
+                                        <span className="collapse-arrow">{collapsed ? '▶' : '▼'}</span>
                                         <span>דילוג {skip}</span>
                                         <span className="skip-group-count">{items.length} תוצאות</span>
                                     </div>
-                                    {items.map((result, i) => (
+                                    {!collapsed && items.map((result, i) => (
                                         <ResultCard key={result.key} result={result} index={i} />
                                     ))}
                                 </div>
-                            ))
-                        ) : (
-                            resultsList.map((result, i) => (
-                                <ResultCard key={result.key} result={result} index={i} />
-                            ))
-                        )}
+                            );
+                        })}
+
+                        {groupBy === 'location' && locationGroups.map(({ key: bookKey, book, parashas }) => {
+                            const bookCollapsed = !expandedKeys.has(bookKey);
+                            return (
+                                <div key={bookKey} className="book-group-section">
+                                    <div className="book-group-header collapsible" onClick={() => toggleCollapse(bookKey)}>
+                                        <span className="collapse-arrow">{bookCollapsed ? '▶' : '▼'}</span>
+                                        <span className="loc-book-label">{book}</span>
+                                        <span className="skip-group-count">
+                                            {parashas.reduce((s, p) => s + p.items.length, 0)} תוצאות
+                                        </span>
+                                    </div>
+                                    {!bookCollapsed && parashas.map(({ key: pKey, parasha, items }) => {
+                                        const pCollapsed = !expandedKeys.has(pKey);
+                                        return (
+                                            <div key={pKey} className="parasha-group-section">
+                                                <div className="parasha-group-header collapsible" onClick={() => toggleCollapse(pKey)}>
+                                                    <span className="collapse-arrow">{pCollapsed ? '▶' : '▼'}</span>
+                                                    <span>{parasha}</span>
+                                                    <span className="skip-group-count">{items.length} תוצאות</span>
+                                                </div>
+                                                {!pCollapsed && items.map((result, i) => (
+                                                    <ResultCard key={result.key} result={result} index={i} />
+                                                ))}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            );
+                        })}
+
                     </>
                 )}
             </div>
