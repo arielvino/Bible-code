@@ -1,0 +1,27 @@
+name: Cleanup Preview
+
+on:
+  pull_request:
+    types: [closed]
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+
+      - name: Remove preview directory
+        run: |
+          SLUG=$(echo '${{ github.head_ref }}' | sed 's/[^a-zA-Z0-9._-]/-/g')
+          if [ -d "preview/$SLUG" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git rm -rf "preview/$SLUG"
+            git commit -m "Remove preview: ${{ github.head_ref }}"
+            git push
+          fi
