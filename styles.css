@@ -373,32 +373,37 @@ body {
     border-color: #4c51bf;
 }
 
-.ctrl-order-btn {
-    padding: 4px 10px;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    font-size: 0.9rem;
-    background: white;
-    color: #4c51bf;
+/* ── Group sections ── */
+.skip-group-section,
+.book-group-section {
+    margin-bottom: 20px;
+}
+
+.parasha-group-section {
+    margin-bottom: 12px;
+    margin-right: 16px;
+}
+
+.collapsible {
     cursor: pointer;
-    font-weight: 700;
-    line-height: 1;
-    transition: background 0.15s;
+    user-select: none;
 }
 
-.ctrl-order-btn:hover {
-    background: #ebf4ff;
+.collapsible:hover {
+    filter: brightness(0.96);
 }
 
-/* ── Skip group sections ── */
-.skip-group-section {
-    margin-bottom: 24px;
+.collapse-arrow {
+    font-size: 0.7rem;
+    color: #718096;
+    margin-left: 8px;
+    flex-shrink: 0;
 }
 
 .skip-group-header {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    gap: 6px;
     padding: 8px 14px;
     background: linear-gradient(90deg, #ebf4ff, #f7fafc);
     border: 1px solid #bee3f8;
@@ -409,11 +414,48 @@ body {
     color: #2b4c8c;
 }
 
+.book-group-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 16px;
+    background: linear-gradient(90deg, #1a2a4a, #2d4a7a);
+    border-radius: 10px;
+    margin-bottom: 10px;
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: white;
+}
+
+.book-group-header .collapse-arrow {
+    color: rgba(255,255,255,0.6);
+}
+
+.loc-book-label {
+    flex: 1;
+}
+
+.parasha-group-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    background: linear-gradient(90deg, #faf5ff, #f7fafc);
+    border: 1px solid #d6bcfa;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    font-size: 0.84rem;
+    font-weight: 700;
+    color: #553c9a;
+}
+
 .skip-group-count {
     font-size: 0.78rem;
     font-weight: 600;
     color: #718096;
+    margin-right: auto;
 }
+
 
 /* ── Individual result card ── */
 .result-card {
