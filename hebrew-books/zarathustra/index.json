@@ -1,0 +1,26 @@
+[
+  {
+    "pos": 0,
+    "chapter": "חלק ראשון",
+    "section": "חלק ראשון",
+    "sectionEn": "Part One"
+  },
+  {
+    "pos": 65386,
+    "chapter": "חלק שני",
+    "section": "חלק שני",
+    "sectionEn": "Part Two"
+  },
+  {
+    "pos": 129712,
+    "chapter": "חלק שלישי",
+    "section": "חלק שלישי",
+    "sectionEn": "Part Three"
+  },
+  {
+    "pos": 207341,
+    "chapter": "חלק רביעי ואחרון",
+    "section": "חלק רביעי ואחרון",
+    "sectionEn": "Part Four"
+  }
+]
