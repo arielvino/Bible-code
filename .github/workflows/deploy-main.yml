@@ -16,36 +16,40 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          path: source
-
-      - uses: actions/checkout@v4
-        with:
-          ref: gh-pages
-          path: gh-pages
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
-          cache-dependency-path: source/package-lock.json
 
       - name: Build
-        working-directory: source
         run: |
           npm ci
           npm run build
 
-      - name: Sync built site to gh-pages root
+      - name: Publish built site to gh-pages root
         run: |
-          rsync -av --delete \
-            --exclude='.git' \
-            --exclude='.github' \
-            --exclude='preview' \
-            source/dist/ gh-pages/
-          cd gh-pages
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Check out gh-pages into a worktree, creating it as an orphan
+          # branch on the first-ever deploy (when it doesn't exist yet).
+          if git ls-remote --exit-code --heads origin gh-pages >/dev/null 2>&1; then
+            git fetch origin gh-pages
+            git worktree add gh-pages origin/gh-pages
+          else
+            git worktree add --detach gh-pages
+            git -C gh-pages checkout --orphan gh-pages
+            git -C gh-pages rm -rf . >/dev/null 2>&1 || true
+          fi
+
+          # Replace root contents with the build, preserving preview folders.
+          rsync -av --delete \
+            --exclude='.git' \
+            --exclude='preview' \
+            dist/ gh-pages/
+
+          cd gh-pages
           git add -A
           git diff --staged --quiet || git commit -m "Deploy main @ ${{ github.sha }}"
-          git push
+          git push origin gh-pages
