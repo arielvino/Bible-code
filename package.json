@@ -1,0 +1,21 @@
+{
+  "name": "bible-code",
+  "version": "1.0.0",
+  "description": "Find words coded in the bible (and other Hebrew corpora) via equidistant letter sequences, and estimate the probability of their existence.",
+  "type": "module",
+  "license": "SEE LICENSE IN LICENSE",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "extract": "node scripts/extract.cjs"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "vite": "^6.0.7"
+  }
+}

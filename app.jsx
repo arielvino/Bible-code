@@ -1,3 +1,14 @@
+import React from 'react';
+import * as ReactDOM from 'react-dom/client';
+import './styles.css';
+
+// Side-effect imports: each attaches its corpus data to `window`
+// (window.BIBLE_TEXT, window.BIBLE_INDEX, window.ZARATHUSTRA_TEXT, ...).
+import './bible-text.js';
+import './bible-index.js';
+import './hebrew-books/zarathustra/text.js';
+import './hebrew-books/zarathustra/index.js';
+
 const { useState, useCallback, useRef, useMemo, useEffect } = React;
 
 const FINAL_FORMS = { 'ך': 'כ', 'ם': 'מ', 'ן': 'נ', 'ף': 'פ', 'ץ': 'צ' };
@@ -185,7 +196,7 @@ function App() {
 
         const numWorkers = Math.min(navigator.hardwareConcurrency || 4, 8);
         const skipsPerWorker = Math.ceil(totalSkips / numWorkers);
-        const workerUrl = new URL('search-worker.js', window.location.href).href;
+        const workerUrl = new URL('./search-worker.js', import.meta.url);
 
         const merged = {};
         let finishedWorkers = 0;
