@@ -3,6 +3,23 @@
 Simple code for finding words coded in the bible — and calculates the
 probability of their existence.
 
+## Development
+
+Requires Node.js 20+.
+
+```sh
+npm install      # install dependencies
+npm run dev      # start the local dev server (http://localhost:5173)
+npm run build    # produce the static site in dist/
+npm run preview  # serve the built dist/ locally
+```
+
+The app is built with [Vite](https://vitejs.dev/) + React. `npm run build`
+emits a fully static bundle to `dist/`, which is what GitHub Pages serves —
+the deploy workflows build the site before publishing. The Vite `base` is
+relative (`./`), so the same build works at the project root and inside
+per-branch preview folders without rebuilding.
+
 ## Live
 
 - Main: <https://arielvino.github.io/Bible-code/>

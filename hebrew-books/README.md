@@ -35,5 +35,5 @@ Reproduce:
 
 ```
 git clone --depth=1 https://github.com/projectbenyehuda/public_domain_dump /tmp/pby
-node scripts/extract.js
+node scripts/extract.cjs
 ```

@@ -25,19 +25,31 @@ jobs:
           ref: gh-pages
           path: gh-pages
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: source/package-lock.json
+
+      - name: Build
+        working-directory: source
+        run: |
+          npm ci
+          npm run build
+
       - name: Compute slug
         id: slug
         run: |
           echo "value=$(echo '${{ github.ref_name }}' | sed 's/[^a-zA-Z0-9._-]/-/g')" >> $GITHUB_OUTPUT
 
-      - name: Sync to preview directory
+      - name: Sync built site to preview directory
         run: |
           SLUG="${{ steps.slug.outputs.value }}"
           mkdir -p gh-pages/preview/$SLUG
           rsync -av --delete \
             --exclude='.git' \
             --exclude='.github' \
-            source/ gh-pages/preview/$SLUG/
+            source/dist/ gh-pages/preview/$SLUG/
           cd gh-pages
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
