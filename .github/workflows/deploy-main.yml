@@ -17,7 +17,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: npm
@@ -36,7 +36,7 @@ jobs:
           # branch on the first-ever deploy (when it doesn't exist yet).
           if git ls-remote --exit-code --heads origin gh-pages >/dev/null 2>&1; then
             git fetch origin gh-pages
-            git worktree add gh-pages origin/gh-pages
+            git worktree add -B gh-pages gh-pages origin/gh-pages
           else
             git worktree add --detach gh-pages
             git -C gh-pages checkout --orphan gh-pages
