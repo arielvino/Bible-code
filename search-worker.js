@@ -1,4 +1,4 @@
-self.onmessage = function(e) {
+self.onmessage = function (e) {
     const { asked, text, firstSkip, lastSkip } = e.data;
     const x = asked.length;
     const results = {};
@@ -9,7 +9,10 @@ self.onmessage = function(e) {
         for (let i = 0; i < limit; i++) {
             let match = true;
             for (let xx = 0; xx < x; xx++) {
-                if (text[i + xx * y] !== asked[xx]) { match = false; break; }
+                if (text[i + xx * y] !== asked[xx]) {
+                    match = false;
+                    break;
+                }
             }
             if (match) {
                 const key = i + '_' + y;
