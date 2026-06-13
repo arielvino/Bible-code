@@ -404,6 +404,11 @@ function App() {
                     </div>
                 </div>
 
+                <div className="skip-hint">
+                    הדילוג הוא המרחק בין אות לאות ברצף — דילוג 2 מדלג על אות אחת (כל אות שנייה),
+                    דילוג 3 מדלג על שתי אותיות, וכן הלאה.
+                </div>
+
                 <button
                     className="search-button"
                     onClick={handleSearch}
