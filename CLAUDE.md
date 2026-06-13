@@ -124,5 +124,19 @@ GitHub Pages, served from the `gh-pages` branch (built, never hand-edited).
 - **PR closed** → `cleanup-preview.yml` removes that preview folder.
 
 Live: <https://arielvino.github.io/Bible-code/>
+
+### PR descriptions
+
+**Always include the branch's preview link in the PR description.** The
+preview URL is:
+
+```
+https://arielvino.github.io/Bible-code/preview/<slug>/
+```
+
+where `<slug>` is the branch name with every non-alphanumeric character
+replaced by `-` (same slug `deploy-preview.yml` computes). The workflow also
+auto-comments this URL on the PR, but it should be in the description too so
+reviewers have it up front.
 </content>
 </invoke>
