@@ -1,77 +1,77 @@
 name: Deploy Preview
 
 on:
-  push:
-    branches-ignore: [main]
+    push:
+        branches-ignore: [main]
 
 permissions:
-  contents: write
-  pull-requests: write
+    contents: write
+    pull-requests: write
 
 concurrency:
-  group: gh-pages
-  cancel-in-progress: false
+    group: gh-pages
+    cancel-in-progress: false
 
 jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
+    deploy:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v6
 
-      - uses: actions/setup-node@v6
-        with:
-          node-version: 22
-          cache: npm
+            - uses: actions/setup-node@v6
+              with:
+                  node-version: 22
+                  cache: npm
 
-      - name: Build
-        run: |
-          npm ci
-          npm run build
+            - name: Build
+              run: |
+                  npm ci
+                  npm run build
 
-      - name: Compute slug
-        id: slug
-        run: |
-          echo "value=$(echo '${{ github.ref_name }}' | sed 's/[^a-zA-Z0-9._-]/-/g')" >> $GITHUB_OUTPUT
+            - name: Compute slug
+              id: slug
+              run: |
+                  echo "value=$(echo '${{ github.ref_name }}' | sed 's/[^a-zA-Z0-9._-]/-/g')" >> $GITHUB_OUTPUT
 
-      - name: Publish built site to preview directory
-        run: |
-          SLUG="${{ steps.slug.outputs.value }}"
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+            - name: Publish built site to preview directory
+              run: |
+                  SLUG="${{ steps.slug.outputs.value }}"
+                  git config user.name "github-actions[bot]"
+                  git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          # Check out gh-pages into a worktree, creating it as an orphan
-          # branch on the first-ever deploy (when it doesn't exist yet).
-          if git ls-remote --exit-code --heads origin gh-pages >/dev/null 2>&1; then
-            git fetch origin gh-pages
-            git worktree add -B gh-pages gh-pages origin/gh-pages
-          else
-            git worktree add --detach gh-pages
-            git -C gh-pages checkout --orphan gh-pages
-            git -C gh-pages rm -rf . >/dev/null 2>&1 || true
-          fi
+                  # Check out gh-pages into a worktree, creating it as an orphan
+                  # branch on the first-ever deploy (when it doesn't exist yet).
+                  if git ls-remote --exit-code --heads origin gh-pages >/dev/null 2>&1; then
+                    git fetch origin gh-pages
+                    git worktree add -B gh-pages gh-pages origin/gh-pages
+                  else
+                    git worktree add --detach gh-pages
+                    git -C gh-pages checkout --orphan gh-pages
+                    git -C gh-pages rm -rf . >/dev/null 2>&1 || true
+                  fi
 
-          mkdir -p gh-pages/preview/$SLUG
-          rsync -av --delete \
-            --exclude='.git' \
-            dist/ gh-pages/preview/$SLUG/
+                  mkdir -p gh-pages/preview/$SLUG
+                  rsync -av --delete \
+                    --exclude='.git' \
+                    dist/ gh-pages/preview/$SLUG/
 
-          cd gh-pages
-          git add -A
-          git diff --staged --quiet || git commit -m "Preview: ${{ github.ref_name }} @ ${{ github.sha }}"
-          git push origin gh-pages
+                  cd gh-pages
+                  git add -A
+                  git diff --staged --quiet || git commit -m "Preview: ${{ github.ref_name }} @ ${{ github.sha }}"
+                  git push origin gh-pages
 
-      - name: Comment preview URL on PR
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          SLUG="${{ steps.slug.outputs.value }}"
-          PR=$(gh pr list \
-            --repo "${{ github.repository }}" \
-            --head '${{ github.ref_name }}' \
-            --json number --jq '.[0].number // empty')
-          if [ -n "$PR" ]; then
-            URL="https://${{ github.repository_owner }}.github.io/$(echo '${{ github.repository }}' | cut -d/ -f2)/preview/$SLUG/"
-            BODY="**Preview deployment:** $URL"
-            gh pr comment "$PR" --repo "${{ github.repository }}" --body "$BODY" --edit-last 2>/dev/null || \
-            gh pr comment "$PR" --repo "${{ github.repository }}" --body "$BODY"
-          fi
+            - name: Comment preview URL on PR
+              env:
+                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              run: |
+                  SLUG="${{ steps.slug.outputs.value }}"
+                  PR=$(gh pr list \
+                    --repo "${{ github.repository }}" \
+                    --head '${{ github.ref_name }}' \
+                    --json number --jq '.[0].number // empty')
+                  if [ -n "$PR" ]; then
+                    URL="https://${{ github.repository_owner }}.github.io/$(echo '${{ github.repository }}' | cut -d/ -f2)/preview/$SLUG/"
+                    BODY="**Preview deployment:** $URL"
+                    gh pr comment "$PR" --repo "${{ github.repository }}" --body "$BODY" --edit-last 2>/dev/null || \
+                    gh pr comment "$PR" --repo "${{ github.repository }}" --body "$BODY"
+                  fi

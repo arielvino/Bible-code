@@ -11,7 +11,7 @@ import './hebrew-books/zarathustra/index.js';
 
 const { useState, useCallback, useRef, useMemo, useEffect } = React;
 
-const FINAL_FORMS = { 'ך': 'כ', 'ם': 'מ', 'ן': 'נ', 'ף': 'פ', 'ץ': 'צ' };
+const FINAL_FORMS = { ך: 'כ', ם: 'מ', ן: 'נ', ף: 'פ', ץ: 'צ' };
 const VALID_LETTERS = new Set('אבגדהוזחטיכלמנסעפצקרשת');
 
 function normalizeWord(input) {
@@ -28,20 +28,29 @@ const CORPORA = {
         id: 'torah',
         nameHe: 'תורה',
         searchVerb: 'בתורה',
-        get text() { return window.BIBLE_TEXT; },
-        get index() { return window.BIBLE_INDEX; },
+        get text() {
+            return window.BIBLE_TEXT;
+        },
+        get index() {
+            return window.BIBLE_INDEX;
+        },
     },
     zarathustra: {
         id: 'zarathustra',
         nameHe: 'כה אמר זרתוסטרא',
         searchVerb: 'בכה אמר זרתוסטרא',
-        get text() { return window.ZARATHUSTRA_TEXT; },
-        get index() { return window.ZARATHUSTRA_INDEX; },
+        get text() {
+            return window.ZARATHUSTRA_TEXT;
+        },
+        get index() {
+            return window.ZARATHUSTRA_INDEX;
+        },
     },
 };
 
 function lookupLocation(idx, pos) {
-    let lo = 0, hi = idx.length - 1;
+    let lo = 0,
+        hi = idx.length - 1;
     while (lo < hi) {
         const mid = (lo + hi + 1) >> 1;
         if (idx[mid].pos <= pos) lo = mid;
@@ -93,7 +102,7 @@ function buildRows(text, startPos, skip, letterCount) {
         for (let ll = -15; ll < 16; ll++) {
             const pos = center + ll;
             cells.push({
-                char: (pos >= 0 && pos < text.length) ? text[pos] : '',
+                char: pos >= 0 && pos < text.length ? text[pos] : '',
                 isMatch: ll === 0,
             });
         }
@@ -123,7 +132,10 @@ function ResultCard({ result, index, corpus }) {
                                         <span className="loc-parasha">{loc.parasha}</span>
                                     </td>
                                     {row.cells.map((cell, ci) => (
-                                        <td key={ci} className={cell.isMatch ? 'match-cell' : 'context-cell'}>
+                                        <td
+                                            key={ci}
+                                            className={cell.isMatch ? 'match-cell' : 'context-cell'}
+                                        >
                                             {cell.char}
                                         </td>
                                     ))}
@@ -153,7 +165,7 @@ function App() {
     const workersRef = useRef([]);
 
     const cancelWorkers = () => {
-        workersRef.current.forEach(w => w.terminate());
+        workersRef.current.forEach((w) => w.terminate());
         workersRef.current = [];
     };
 
@@ -188,7 +200,12 @@ function App() {
         const totalSkips = Math.max(0, maxSkip - firstSkip + 1);
 
         if (totalSkips === 0) {
-            setStats({ probability, totalResults: 0, rarity: options === 0 ? 'N/A' : '1 / ' + options.toFixed(0), attempts });
+            setStats({
+                probability,
+                totalResults: 0,
+                rarity: options === 0 ? 'N/A' : '1 / ' + options.toFixed(0),
+                attempts,
+            });
             setResultsMap({});
             setIsSearching(false);
             return;
@@ -273,7 +290,11 @@ function App() {
             if (!map.has(r.skip)) map.set(r.skip, []);
             map.get(r.skip).push(r);
         }
-        return Array.from(map.entries()).map(([skip, items]) => ({ key: 's_' + skip, skip, items }));
+        return Array.from(map.entries()).map(([skip, items]) => ({
+            key: 's_' + skip,
+            skip,
+            items,
+        }));
     }, [resultsList, groupBy]);
 
     const locationGroups = useMemo(() => {
@@ -298,7 +319,7 @@ function App() {
     }, [resultsList, groupBy, corpus]);
 
     const toggleCollapse = useCallback((key) => {
-        setExpandedKeys(prev => {
+        setExpandedKeys((prev) => {
             const next = new Set(prev);
             next.has(key) ? next.delete(key) : next.add(key);
             return next;
@@ -313,13 +334,15 @@ function App() {
             <header className="app-header">
                 <h1>בוחן קודי האותיות</h1>
                 <p className="app-subtitle">
-                    חיפוש דילוגי אותיות {corpus.searchVerb} וחישוב הסיכוי הסטטיסטי — כדי לבחון האם המופעים חריגים מבחינה מתמטית
+                    חיפוש דילוגי אותיות {corpus.searchVerb} וחישוב הסיכוי הסטטיסטי — כדי לבחון האם
+                    המופעים חריגים מבחינה מתמטית
                 </p>
                 <div className="header-note">
-                    כמות המופעים הצפויה = ניסיונות ÷ נדירות המילה. כשהיחס קרוב ל-1, הממצא אינו מפתיע סטטיסטית.
+                    כמות המופעים הצפויה = ניסיונות ÷ נדירות המילה. כשהיחס קרוב ל-1, הממצא אינו מפתיע
+                    סטטיסטית.
                 </div>
                 <div className="corpus-toggle" role="tablist" aria-label="בחירת ספר">
-                    {Object.values(CORPORA).map(c => (
+                    {Object.values(CORPORA).map((c) => (
                         <button
                             key={c.id}
                             role="tab"
@@ -328,7 +351,9 @@ function App() {
                             onClick={() => setCorpusId(c.id)}
                         >
                             {c.nameHe}
-                            <span className="corpus-len">{c.text.length.toLocaleString()} אותיות</span>
+                            <span className="corpus-len">
+                                {c.text.length.toLocaleString()} אותיות
+                            </span>
                         </button>
                     ))}
                 </div>
@@ -341,8 +366,8 @@ function App() {
                         type="text"
                         className="word-input"
                         value={word}
-                        onChange={e => setWord(normalizeWord(e.target.value))}
-                        onKeyDown={e => e.key === 'Enter' && handleSearch()}
+                        onChange={(e) => setWord(normalizeWord(e.target.value))}
+                        onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                         placeholder="לדוגמה: תורה"
                         dir="rtl"
                         autoComplete="off"
@@ -358,7 +383,9 @@ function App() {
                             pattern="[0-9]*"
                             className="skip-input"
                             value={firstSkip}
-                            onChange={e => setFirstSkip(Math.max(2, parseInt(e.target.value) || 2))}
+                            onChange={(e) =>
+                                setFirstSkip(Math.max(2, parseInt(e.target.value) || 2))
+                            }
                         />
                     </div>
                     <div className="skip-separator">—</div>
@@ -370,7 +397,9 @@ function App() {
                             pattern="[0-9]*"
                             className="skip-input"
                             value={lastSkip}
-                            onChange={e => setLastSkip(Math.max(2, parseInt(e.target.value) || 2))}
+                            onChange={(e) =>
+                                setLastSkip(Math.max(2, parseInt(e.target.value) || 2))
+                            }
                         />
                     </div>
                 </div>
@@ -380,19 +409,30 @@ function App() {
                     onClick={handleSearch}
                     disabled={isSearching || !word.trim()}
                 >
-                    {isSearching
-                        ? <span className="btn-content"><span className="btn-spinner"></span>מחפש... {progress}%</span>
-                        : <span className="btn-content">חיפוש</span>
-                    }
+                    {isSearching ? (
+                        <span className="btn-content">
+                            <span className="btn-spinner"></span>מחפש... {progress}%
+                        </span>
+                    ) : (
+                        <span className="btn-content">חיפוש</span>
+                    )}
                 </button>
             </div>
 
             {stats && (
                 <div className="stats-grid">
-                    <StatCard label="סיכוי שהביטוי יופיע" value={stats.probability} colorClass="blue" />
+                    <StatCard
+                        label="סיכוי שהביטוי יופיע"
+                        value={stats.probability}
+                        colorClass="blue"
+                    />
                     <StatCard label="מופעים בפועל" value={stats.totalResults} colorClass="green" />
                     <StatCard label="נדירות המילה" value={stats.rarity} colorClass="purple" />
-                    <StatCard label="מספר הניסיונות" value={stats.attempts.toLocaleString()} colorClass="amber" />
+                    <StatCard
+                        label="מספר הניסיונות"
+                        value={stats.attempts.toLocaleString()}
+                        colorClass="amber"
+                    />
                 </div>
             )}
 
@@ -400,7 +440,9 @@ function App() {
                 {isSearching && (
                     <div className="state-placeholder">
                         <div className="large-spinner"></div>
-                        <p>מחפש {corpus.searchVerb}... {progress}%</p>
+                        <p>
+                            מחפש {corpus.searchVerb}... {progress}%
+                        </p>
                     </div>
                 )}
 
@@ -424,59 +466,103 @@ function App() {
                             <span className="results-count-badge">{totalResults} תוצאות</span>
                             <div className="sort-controls">
                                 <label className="ctrl-label">קיבוץ:</label>
-                                <select className="ctrl-select" value={groupBy} onChange={e => { setGroupBy(e.target.value); setExpandedKeys(new Set()); }}>
+                                <select
+                                    className="ctrl-select"
+                                    value={groupBy}
+                                    onChange={(e) => {
+                                        setGroupBy(e.target.value);
+                                        setExpandedKeys(new Set());
+                                    }}
+                                >
                                     <option value="skip">לפי דילוג</option>
                                     <option value="location">לפי ספר / פרשה</option>
                                 </select>
                             </div>
                         </div>
 
-                        {groupBy === 'skip' && skipGroups.map(({ key, skip, items }) => {
-                            const collapsed = !expandedKeys.has(key);
-                            return (
-                                <div key={key} className="skip-group-section">
-                                    <div className="skip-group-header collapsible" onClick={() => toggleCollapse(key)}>
-                                        <span className="collapse-arrow">{collapsed ? '▶' : '▼'}</span>
-                                        <span>דילוג {skip}</span>
-                                        <span className="skip-group-count">{items.length} תוצאות</span>
+                        {groupBy === 'skip' &&
+                            skipGroups.map(({ key, skip, items }) => {
+                                const collapsed = !expandedKeys.has(key);
+                                return (
+                                    <div key={key} className="skip-group-section">
+                                        <div
+                                            className="skip-group-header collapsible"
+                                            onClick={() => toggleCollapse(key)}
+                                        >
+                                            <span className="collapse-arrow">
+                                                {collapsed ? '▶' : '▼'}
+                                            </span>
+                                            <span>דילוג {skip}</span>
+                                            <span className="skip-group-count">
+                                                {items.length} תוצאות
+                                            </span>
+                                        </div>
+                                        {!collapsed &&
+                                            items.map((result, i) => (
+                                                <ResultCard
+                                                    key={result.key}
+                                                    result={result}
+                                                    index={i}
+                                                    corpus={corpus}
+                                                />
+                                            ))}
                                     </div>
-                                    {!collapsed && items.map((result, i) => (
-                                        <ResultCard key={result.key} result={result} index={i} corpus={corpus} />
-                                    ))}
-                                </div>
-                            );
-                        })}
+                                );
+                            })}
 
-                        {groupBy === 'location' && locationGroups.map(({ key: bookKey, book, parashas }) => {
-                            const bookCollapsed = !expandedKeys.has(bookKey);
-                            return (
-                                <div key={bookKey} className="book-group-section">
-                                    <div className="book-group-header collapsible" onClick={() => toggleCollapse(bookKey)}>
-                                        <span className="collapse-arrow">{bookCollapsed ? '▶' : '▼'}</span>
-                                        <span className="loc-book-label">{book}</span>
-                                        <span className="skip-group-count">
-                                            {parashas.reduce((s, p) => s + p.items.length, 0)} תוצאות
-                                        </span>
+                        {groupBy === 'location' &&
+                            locationGroups.map(({ key: bookKey, book, parashas }) => {
+                                const bookCollapsed = !expandedKeys.has(bookKey);
+                                return (
+                                    <div key={bookKey} className="book-group-section">
+                                        <div
+                                            className="book-group-header collapsible"
+                                            onClick={() => toggleCollapse(bookKey)}
+                                        >
+                                            <span className="collapse-arrow">
+                                                {bookCollapsed ? '▶' : '▼'}
+                                            </span>
+                                            <span className="loc-book-label">{book}</span>
+                                            <span className="skip-group-count">
+                                                {parashas.reduce((s, p) => s + p.items.length, 0)}{' '}
+                                                תוצאות
+                                            </span>
+                                        </div>
+                                        {!bookCollapsed &&
+                                            parashas.map(({ key: pKey, parasha, items }) => {
+                                                const pCollapsed = !expandedKeys.has(pKey);
+                                                return (
+                                                    <div
+                                                        key={pKey}
+                                                        className="parasha-group-section"
+                                                    >
+                                                        <div
+                                                            className="parasha-group-header collapsible"
+                                                            onClick={() => toggleCollapse(pKey)}
+                                                        >
+                                                            <span className="collapse-arrow">
+                                                                {pCollapsed ? '▶' : '▼'}
+                                                            </span>
+                                                            <span>{parasha}</span>
+                                                            <span className="skip-group-count">
+                                                                {items.length} תוצאות
+                                                            </span>
+                                                        </div>
+                                                        {!pCollapsed &&
+                                                            items.map((result, i) => (
+                                                                <ResultCard
+                                                                    key={result.key}
+                                                                    result={result}
+                                                                    index={i}
+                                                                    corpus={corpus}
+                                                                />
+                                                            ))}
+                                                    </div>
+                                                );
+                                            })}
                                     </div>
-                                    {!bookCollapsed && parashas.map(({ key: pKey, parasha, items }) => {
-                                        const pCollapsed = !expandedKeys.has(pKey);
-                                        return (
-                                            <div key={pKey} className="parasha-group-section">
-                                                <div className="parasha-group-header collapsible" onClick={() => toggleCollapse(pKey)}>
-                                                    <span className="collapse-arrow">{pCollapsed ? '▶' : '▼'}</span>
-                                                    <span>{parasha}</span>
-                                                    <span className="skip-group-count">{items.length} תוצאות</span>
-                                                </div>
-                                                {!pCollapsed && items.map((result, i) => (
-                                                    <ResultCard key={result.key} result={result} index={i} corpus={corpus} />
-                                                ))}
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            );
-                        })}
-
+                                );
+                            })}
                     </>
                 )}
             </div>

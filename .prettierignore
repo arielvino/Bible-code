@@ -1,0 +1,14 @@
+# Build output
+dist/
+node_modules/
+
+# Generated corpora / data (large machine-written files)
+bible-text.js
+bible-index.js
+hebrew-books/
+
+# Legacy standalone bundle
+Bible-code.html
+
+# Lockfile
+package-lock.json
