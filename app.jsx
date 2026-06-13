@@ -23,6 +23,17 @@ function normalizeWord(input) {
     return result;
 }
 
+// Keep only Hebrew letters (incl. final forms) and whitespace as the user
+// types. Whitespace is preserved here so phrases display naturally; it is
+// stripped at search time by normalizeWord.
+function sanitizeInput(input) {
+    let result = '';
+    for (const ch of input) {
+        if (ch in FINAL_FORMS || VALID_LETTERS.has(ch) || /\s/.test(ch)) result += ch;
+    }
+    return result;
+}
+
 const CORPORA = {
     torah: {
         id: 'torah',
@@ -366,7 +377,7 @@ function App() {
                         type="text"
                         className="word-input"
                         value={word}
-                        onChange={(e) => setWord(normalizeWord(e.target.value))}
+                        onChange={(e) => setWord(sanitizeInput(e.target.value))}
                         onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                         placeholder="לדוגמה: תורה"
                         dir="rtl"
