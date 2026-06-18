@@ -74,8 +74,8 @@ function lookupLocation(idx, pos) {
     return idx[lo];
 }
 
-// Render a number as a Hebrew numeral (gematria), e.g. 1→א׳, 15→ט״ו, 24→כ״ד.
-// Torah perakim go up to 50 and pesukim up to 89, so hundreds suffice.
+// Render a number as a Hebrew numeral (gematria), e.g. 1→א, 15→טו, 24→כד
+// (no geresh/gershayim). Torah perakim go up to 50 and pesukim up to 89.
 const HEB_NUM = [
     [400, 'ת'],
     [300, 'ש'],
@@ -120,9 +120,7 @@ function hebrewNumeral(n) {
             rem -= val;
         }
     }
-    // Punctuate: geresh for a single letter, gershayim before the last otherwise.
-    if (out.length === 1) return out + '׳';
-    return out.slice(0, -1) + '״' + out.slice(-1);
+    return out;
 }
 
 // For corpora that carry a verse index, format "perek:pasuk" in Hebrew numerals.
