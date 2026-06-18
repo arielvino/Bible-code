@@ -10,8 +10,9 @@ export default [
         ignores: [
             'dist/**',
             'node_modules/**',
-            'bible-text.js',
-            'bible-index.js',
+            'bible-wlc-text.js',
+            'bible-wlc-index.js',
+            'bible-wlc-verse-index.js',
             'hebrew-books/**',
             'Bible-code.html',
         ],

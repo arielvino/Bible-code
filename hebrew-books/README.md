@@ -1,7 +1,7 @@
 # Hebrew books — Torah-format corpus
 
 Public-domain Hebrew works, processed into the same raw-letters format as
-`bible-text.js` in this repository. Each book lives in its own folder with:
+`bible-wlc-text.js` in this repository. Each book lives in its own folder with:
 
 - `text.txt` — one long string of Hebrew letters only (`U+05D0..U+05EA`).
   All whitespace, punctuation, nikud and cantillation are stripped, and
@@ -9,7 +9,7 @@ Public-domain Hebrew works, processed into the same raw-letters format as
   (`ך→כ`, `ם→מ`, `ן→נ`, `ף→פ`, `ץ→צ`). 22 unique letters, identical to
   the Torah file.
 - `index.json` — array of `{pos, chapter, section, sectionEn}` entries
-  marking chapter boundaries (analogous to `bible-index.js`).
+  marking chapter boundaries (analogous to `bible-wlc-index.js`).
 - `metadata.json` — title, author, translator, source URL, character
   count and provenance.
 

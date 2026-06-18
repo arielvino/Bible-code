@@ -34,10 +34,10 @@ and torn down by `cleanup-preview.yml` when the PR closes.
 The search runs against one of two raw-letter Hebrew corpora (Torah-format:
 22 letters, finals normalised, no whitespace/punctuation/nikud).
 
-| Corpus                                         | Source                             |   Chars |
-| ---------------------------------------------- | ---------------------------------- | ------: |
-| Torah                                          | `bible-text.js` / `bible-index.js` | 304,948 |
-| כה אמר זרתוסטרא (Nietzsche, tr. D. Frischmann) | `hebrew-books/zarathustra/`        | 295,362 |
+| Corpus                                         | Source                                     |   Chars |
+| ---------------------------------------------- | ------------------------------------------ | ------: |
+| Torah (Leningrad Codex, ketiv)                 | `bible-wlc-text.js` / `bible-wlc-index.js` | 304,850 |
+| כה אמר זרתוסטרא (Nietzsche, tr. D. Frischmann) | `hebrew-books/zarathustra/`                | 295,362 |
 
 Switch corpora with the pill toggle in the header. See
 [`hebrew-books/README.md`](hebrew-books/README.md) for the full corpus,

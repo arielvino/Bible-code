@@ -14,23 +14,19 @@ build emits a fully static bundle to `dist/`, served by GitHub Pages.
 
 ## Layout
 
-| Path                            | What it is                                                                                                                                 |
-| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| `index.html`                    | Entry point; mounts `app.jsx` into `#root`. RTL, lang=he.                                                                                  |
-| `app.jsx`                       | The entire React UI + search orchestration. One file, no components split out beyond what's here.                                          |
-| `search-worker.js`              | Web Worker that does the actual ELS scan. Pure function: receives `{asked, text, firstSkip, lastSkip}`, returns a map of matches.          |
-| `styles.css`                    | All styling.                                                                                                                               |
-| `bible-wlc-text.js`             | **Default Torah edition.** `window.WLC_TEXT` = 304,850-char pure _ketiv_ consonantal text of the Leningrad Codex (OpenScriptures/morphhb). |
-| `bible-wlc-index.js`            | `window.WLC_INDEX` = the 54 parasha boundaries for the WLC edition.                                                                        |
-| `bible-wlc-verse-index.js`      | `window.WLC_VERSE_INDEX` = `{pos, perek, pasuk}` for all 5,846 WLC verses (standard ta'am-tachton division).                               |
-| `bible-text.js`                 | Legacy "טקסט קודם" Torah corpus: `window.BIBLE_TEXT` = 304,948-char string. Mixed edition (inlines some qere); kept for comparison.        |
-| `bible-index.js`                | `window.BIBLE_INDEX` = array of `{pos, parasha, book, bookEn}` marking the 54 parasha boundaries (legacy text).                            |
-| `bible-verse-index.js`          | `window.BIBLE_VERSE_INDEX` = array of `{pos, perek, pasuk}` for all 5,846 verses of the legacy text.                                       |
-| `hebrew-books/`                 | Additional public-domain Hebrew corpora (see below).                                                                                       |
-| `scripts/extract.cjs`           | One-off tool that converts Project Ben-Yehuda source texts into the raw-letter format. Not part of the build.                              |
-| `scripts/build-verse-index.cjs` | One-off tool that regenerates `bible-verse-index.js` by aligning verse-segmented editions onto `bible-text.js`. Not in build.              |
-| `scripts/build-torah-wlc.cjs`   | One-off tool that builds the WLC edition (`bible-wlc-*.js`) from OpenScriptures/morphhb, with a full self-audit. Not in build.             |
-| `.github/workflows/`            | CI (lint/format/build/audit) + GitHub Pages deploy.                                                                                        |
+| Path                          | What it is                                                                                                                        |
+| ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `index.html`                  | Entry point; mounts `app.jsx` into `#root`. RTL, lang=he.                                                                         |
+| `app.jsx`                     | The entire React UI + search orchestration. One file, no components split out beyond what's here.                                 |
+| `search-worker.js`            | Web Worker that does the actual ELS scan. Pure function: receives `{asked, text, firstSkip, lastSkip}`, returns a map of matches. |
+| `styles.css`                  | All styling.                                                                                                                      |
+| `bible-wlc-text.js`           | Torah corpus: `window.WLC_TEXT` = 304,850-char pure _ketiv_ consonantal text of the Leningrad Codex (OpenScriptures/morphhb).     |
+| `bible-wlc-index.js`          | `window.WLC_INDEX` = the 54 parasha boundaries for the WLC edition.                                                               |
+| `bible-wlc-verse-index.js`    | `window.WLC_VERSE_INDEX` = `{pos, perek, pasuk}` for all 5,846 WLC verses (standard ta'am-tachton division).                      |
+| `hebrew-books/`               | Additional public-domain Hebrew corpora (see below).                                                                              |
+| `scripts/extract.cjs`         | One-off tool that converts Project Ben-Yehuda source texts into the raw-letter format. Not part of the build.                     |
+| `scripts/build-torah-wlc.cjs` | One-off tool that builds the WLC edition (`bible-wlc-*.js`) from OpenScriptures/morphhb, with a full self-audit. Not in build.    |
+| `.github/workflows/`          | CI (lint/format/build/audit) + GitHub Pages deploy.                                                                               |
 
 ## How the search works
 
@@ -45,7 +41,7 @@ build emits a fully static bundle to `dist/`, served by GitHub Pages.
 3. Results are merged on the main thread and rendered grouped by skip or by
    book/parasha. `lookupLocation` does a binary search over the index to
    label each position. For the Torah, `lookupVerse` does a second binary
-   search over `BIBLE_VERSE_INDEX` to add a `perek:pasuk` reference (rendered
+   search over `WLC_VERSE_INDEX` to add a `perek:pasuk` reference (rendered
    as Hebrew numerals via `hebrewNumeral`).
 4. **Statistics** (`calcOptions`, `calcAttempts` in `app.jsx`): "rarity" is
    roughly `1 / P(word appears at one position)` from per-letter
@@ -56,7 +52,7 @@ build emits a fully static bundle to `dist/`, served by GitHub Pages.
 ### Corpus wiring (important gotcha)
 
 Corpora are attached to `window` via **side-effect imports** at the top of
-`app.jsx` (e.g. `import './bible-text.js'` sets `window.BIBLE_TEXT`). The
+`app.jsx` (e.g. `import './bible-wlc-text.js'` sets `window.WLC_TEXT`). The
 `CORPORA` object in `app.jsx` then reads them through getters.
 
 A book under `hebrew-books/` is **only selectable in the app if it has
@@ -93,28 +89,7 @@ It does not emit the `.js` wrappers — those are produced/maintained
 separately (see corpus wiring above). See `hebrew-books/README.md` for the
 book list and provenance.
 
-### Regenerating the verse index
-
-`scripts/build-verse-index.cjs` rebuilds `bible-verse-index.js`. It needs
-network access (fetches two Hebrew editions — Leningrad/WLC and Aleppo/MAM —
-from the Sefaria API) and is **not** run by the build or CI:
-
-```sh
-node scripts/build-verse-index.cjs
-```
-
-`bible-text.js` is its own consonantal (ketiv) edition that no standard
-digital text reproduces letter-for-letter, so the script doesn't trust any
-single source for positions. It **aligns** each verse-segmented edition onto
-the local letters (Masoretic verse division is universal; only male/haser and
-ketiv/qere spelling differs) and then refuses to emit unless every boundary is
-independently confirmed — all 54 parasha anchors land on verse boundaries, the
-total is exactly 304,948, and each verse is corroborated by either an exact
-consonant-skeleton match against WLC or agreement with the independent MAM
-alignment. The Decalogue (Exodus 20) uses the common 23-verse division, so
-per-book verse counts are 1533 / 1210 / 859 / 1288 / 956 (= 5,846 total).
-
-### Regenerating the WLC edition (default Torah)
+### Regenerating the WLC edition (the Torah corpus)
 
 `scripts/build-torah-wlc.cjs` rebuilds the three `bible-wlc-*.js` files from
 OpenScriptures/**morphhb** (the Westminster/Groves digitisation of the

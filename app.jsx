@@ -3,10 +3,7 @@ import * as ReactDOM from 'react-dom/client';
 import './styles.css';
 
 // Side-effect imports: each attaches its corpus data to `window`
-// (window.BIBLE_TEXT, window.BIBLE_INDEX, window.ZARATHUSTRA_TEXT, ...).
-import './bible-text.js';
-import './bible-index.js';
-import './bible-verse-index.js';
+// (window.WLC_TEXT, window.WLC_INDEX, window.ZARATHUSTRA_TEXT, ...).
 import './bible-wlc-text.js';
 import './bible-wlc-index.js';
 import './bible-wlc-verse-index.js';
@@ -41,7 +38,7 @@ function sanitizeInput(input) {
 const CORPORA = {
     wlc: {
         id: 'wlc',
-        nameHe: 'תורה — נוסח לנינגרד (כתיב)',
+        nameHe: 'תורה',
         searchVerb: 'בתורה',
         get text() {
             return window.WLC_TEXT;
@@ -51,20 +48,6 @@ const CORPORA = {
         },
         get verseIndex() {
             return window.WLC_VERSE_INDEX;
-        },
-    },
-    torah: {
-        id: 'torah',
-        nameHe: 'תורה — טקסט קודם',
-        searchVerb: 'בתורה',
-        get text() {
-            return window.BIBLE_TEXT;
-        },
-        get index() {
-            return window.BIBLE_INDEX;
-        },
-        get verseIndex() {
-            return window.BIBLE_VERSE_INDEX;
         },
     },
     zarathustra: {
