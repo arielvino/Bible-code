@@ -7,6 +7,9 @@ import './styles.css';
 import './bible-text.js';
 import './bible-index.js';
 import './bible-verse-index.js';
+import './bible-wlc-text.js';
+import './bible-wlc-index.js';
+import './bible-wlc-verse-index.js';
 import './hebrew-books/zarathustra/text.js';
 import './hebrew-books/zarathustra/index.js';
 
@@ -36,9 +39,23 @@ function sanitizeInput(input) {
 }
 
 const CORPORA = {
+    wlc: {
+        id: 'wlc',
+        nameHe: 'תורה — נוסח לנינגרד (כתיב)',
+        searchVerb: 'בתורה',
+        get text() {
+            return window.WLC_TEXT;
+        },
+        get index() {
+            return window.WLC_INDEX;
+        },
+        get verseIndex() {
+            return window.WLC_VERSE_INDEX;
+        },
+    },
     torah: {
         id: 'torah',
-        nameHe: 'תורה',
+        nameHe: 'תורה — טקסט קודם',
         searchVerb: 'בתורה',
         get text() {
             return window.BIBLE_TEXT;
@@ -230,7 +247,7 @@ function ResultCard({ result, index, corpus }) {
 }
 
 function App() {
-    const [corpusId, setCorpusId] = useState('torah');
+    const [corpusId, setCorpusId] = useState('wlc');
     const corpus = CORPORA[corpusId];
     const [word, setWord] = useState('');
     const [firstSkip, setFirstSkip] = useState(2);

@@ -6,6 +6,9 @@ node_modules/
 bible-text.js
 bible-index.js
 bible-verse-index.js
+bible-wlc-text.js
+bible-wlc-index.js
+bible-wlc-verse-index.js
 hebrew-books/
 
 # Legacy standalone bundle
