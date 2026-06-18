@@ -147,6 +147,8 @@ const PARASHA = [
 // Parse one morphhb OSIS book: returns per-verse ketiv consonants and the
 // ketiv/qere list. Words live in <w>…</w> (their seg-wrapped large letters are
 // kept); qere readings sit in <note> (dropped); פ/ס markers sit outside <w>.
+// toLetters() is the sole filter — it keeps only the 22 Hebrew letters, so any
+// residual markup (tag names, attributes) is discarded without a regex strip.
 function parseMorphhb(xml) {
     const verses = [];
     const kq = [];
@@ -161,17 +163,10 @@ function parseMorphhb(xml) {
             /<w type="x-ketiv"[^>]*>([\s\S]*?)<\/w>\s*<note[\s\S]*?<rdg type="x-qere">([\s\S]*?)<\/rdg>/g;
         let km;
         while ((km = kre.exec(raw)))
-            kq.push({
-                perek,
-                pasuk,
-                ketiv: toLetters(km[1].replace(/<[^>]*>/g, '')),
-                qere: toLetters(km[2].replace(/<[^>]*>/g, '')),
-            });
+            kq.push({ perek, pasuk, ketiv: toLetters(km[1]), qere: toLetters(km[2]) });
         const body = raw.replace(/<note[\s\S]*?<\/note>/g, '');
         const ketiv = toLetters(
-            [...body.matchAll(/<w\b[^>]*>([\s\S]*?)<\/w>/g)]
-                .map((x) => x[1].replace(/<[^>]*>/g, ''))
-                .join(''),
+            [...body.matchAll(/<w\b[^>]*>([\s\S]*?)<\/w>/g)].map((x) => x[1]).join(''),
         );
         verses.push({ perek, pasuk, ketiv });
     }
