@@ -23,7 +23,6 @@ per-branch preview folders without rebuilding.
 ## Live
 
 - Main: <https://arielvino.github.io/Bible-code/>
-- This branch's preview: <https://arielvino.github.io/Bible-code/preview/claude-extract-hebrew-books-kMSua/>
 
 Previews are published automatically by `.github/workflows/deploy-preview.yml`
 on every push to a non-`main` branch (slug = branch name with `/` → `-`),
