@@ -152,24 +152,35 @@ GitHub Pages, served from the `gh-pages` branch (built, never hand-edited).
 - **Push to `main`** → `deploy-main.yml` builds and rsyncs `dist/` to the
   `gh-pages` root, preserving the `preview/` folder.
 - **Push to any other branch** → `deploy-preview.yml` builds and publishes
-  to `gh-pages/preview/<slug>/` (slug = branch name with non-alphanumerics
-  → `-`) and comments the preview URL on the PR.
+  to `gh-pages/preview/<slug>/` (slug = branch name with every character
+  outside `[A-Za-z0-9._-]` → `-`) and comments the preview URL on the PR.
 - **PR closed** → `cleanup-preview.yml` removes that preview folder.
 
 Live: <https://arielvino.github.io/Bible-code/>
 
 ### PR descriptions
 
-**Always include the branch's preview link in the PR description.** The
-preview URL is:
+**Always include the branch's preview link in the PR description — and always
+compute it fresh from the _current_ branch.** Never copy a preview URL from the
+README, a previous PR, or another branch: that is exactly how a stale/wrong
+slug ends up in a description.
+
+The preview URL is:
 
 ```
 https://arielvino.github.io/Bible-code/preview/<slug>/
 ```
 
-where `<slug>` is the branch name with every non-alphanumeric character
-replaced by `-` (same slug `deploy-preview.yml` computes). The workflow also
-auto-comments this URL on the PR, but it should be in the description too so
-reviewers have it up front.
-</content>
-</invoke>
+`<slug>` must match what `deploy-preview.yml` computes byte-for-byte: the
+branch name with every character **outside** `[A-Za-z0-9._-]` replaced by `-`
+(so `/` → `-`, but dots, underscores and existing hyphens are kept — it is
+**not** "all non-alphanumerics"). Derive it mechanically, don't hand-write it:
+
+```sh
+# preview URL for the branch you're on
+echo "https://arielvino.github.io/Bible-code/preview/$(git rev-parse --abbrev-ref HEAD | sed 's/[^A-Za-z0-9._-]/-/g')/"
+```
+
+e.g. `claude/inspiring-cerf-pq91v5` → `claude-inspiring-cerf-pq91v5`. The
+workflow also auto-comments this URL on the PR, but include it in the
+description too so reviewers have it up front.
