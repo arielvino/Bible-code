@@ -6,6 +6,7 @@ import './styles.css';
 // (window.BIBLE_TEXT, window.BIBLE_INDEX, window.ZARATHUSTRA_TEXT, ...).
 import './bible-text.js';
 import './bible-index.js';
+import './bible-verse-index.js';
 import './hebrew-books/zarathustra/text.js';
 import './hebrew-books/zarathustra/index.js';
 
@@ -45,6 +46,9 @@ const CORPORA = {
         get index() {
             return window.BIBLE_INDEX;
         },
+        get verseIndex() {
+            return window.BIBLE_VERSE_INDEX;
+        },
     },
     zarathustra: {
         id: 'zarathustra',
@@ -68,6 +72,64 @@ function lookupLocation(idx, pos) {
         else hi = mid - 1;
     }
     return idx[lo];
+}
+
+// Render a number as a Hebrew numeral (gematria), e.g. 1→א׳, 15→ט״ו, 24→כ״ד.
+// Torah perakim go up to 50 and pesukim up to 89, so hundreds suffice.
+const HEB_NUM = [
+    [400, 'ת'],
+    [300, 'ש'],
+    [200, 'ר'],
+    [100, 'ק'],
+    [90, 'צ'],
+    [80, 'פ'],
+    [70, 'ע'],
+    [60, 'ס'],
+    [50, 'נ'],
+    [40, 'מ'],
+    [30, 'ל'],
+    [20, 'כ'],
+    [10, 'י'],
+    [9, 'ט'],
+    [8, 'ח'],
+    [7, 'ז'],
+    [6, 'ו'],
+    [5, 'ה'],
+    [4, 'ד'],
+    [3, 'ג'],
+    [2, 'ב'],
+    [1, 'א'],
+];
+function hebrewNumeral(n) {
+    let out = '';
+    let rem = n;
+    for (const [val, letter] of HEB_NUM) {
+        // 15 and 16 are written טו / טז, never יה / יו (avoid spelling the Name)
+        if (rem === 15) {
+            out += 'טו';
+            rem = 0;
+            break;
+        }
+        if (rem === 16) {
+            out += 'טז';
+            rem = 0;
+            break;
+        }
+        while (rem >= val) {
+            out += letter;
+            rem -= val;
+        }
+    }
+    // Punctuate: geresh for a single letter, gershayim before the last otherwise.
+    if (out.length === 1) return out + '׳';
+    return out.slice(0, -1) + '״' + out.slice(-1);
+}
+
+// For corpora that carry a verse index, format "perek:pasuk" in Hebrew numerals.
+function lookupVerse(verseIndex, pos) {
+    if (!verseIndex) return null;
+    const v = lookupLocation(verseIndex, pos);
+    return `${hebrewNumeral(v.perek)}:${hebrewNumeral(v.pasuk)}`;
 }
 
 function calcOptions(asked, text) {
@@ -135,12 +197,19 @@ function ResultCard({ result, index, corpus }) {
                     <tbody>
                         {rows.map((row, ri) => {
                             const loc = lookupLocation(corpus.index, row.centerPos);
+                            const verseRef = lookupVerse(corpus.verseIndex, row.centerPos);
                             return (
                                 <tr key={ri}>
                                     <td className="location-cell">
                                         <span className="loc-book">{loc.book}</span>
                                         <span className="loc-dot">·</span>
                                         <span className="loc-parasha">{loc.parasha}</span>
+                                        {verseRef && (
+                                            <>
+                                                <span className="loc-dot">·</span>
+                                                <span className="loc-verse">{verseRef}</span>
+                                            </>
+                                        )}
                                     </td>
                                     {row.cells.map((cell, ci) => (
                                         <td

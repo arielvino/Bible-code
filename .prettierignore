@@ -5,6 +5,7 @@ node_modules/
 # Generated corpora / data (large machine-written files)
 bible-text.js
 bible-index.js
+bible-verse-index.js
 hebrew-books/
 
 # Legacy standalone bundle
