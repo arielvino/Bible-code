@@ -8,8 +8,5 @@ bible-wlc-index.js
 bible-wlc-verse-index.js
 hebrew-books/
 
-# Legacy standalone bundle
-Bible-code.html
-
 # Lockfile
 package-lock.json

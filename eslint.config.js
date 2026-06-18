@@ -14,7 +14,6 @@ export default [
             'bible-wlc-index.js',
             'bible-wlc-verse-index.js',
             'hebrew-books/**',
-            'Bible-code.html',
         ],
     },
 
