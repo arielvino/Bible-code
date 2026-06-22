@@ -15,10 +15,12 @@ const { useState, useCallback, useRef, useMemo, useEffect } = React;
 const FINAL_FORMS = { ך: 'כ', ם: 'מ', ן: 'נ', ף: 'פ', ץ: 'צ' };
 const VALID_LETTERS = new Set('אבגדהוזחטיכלמנסעפצקרשת');
 
-// Standard Israeli Hebrew keyboard layout: an English letter is mapped to the
-// Hebrew letter printed on the same physical key, so a user typing on a QWERTY
-// layout still gets the Hebrew letter they mean (e.g. `a`/`A` → ש, `r`/`R` → ר).
-// Case-insensitive; keys that don't carry a Hebrew letter (q, w) are omitted.
+// Standard Israeli Hebrew keyboard layout: a QWERTY key is mapped to the Hebrew
+// letter printed on the same physical key, so a user typing on a QWERTY layout
+// still gets the Hebrew letter they mean (e.g. `a`/`A` → ש, `r`/`R` → ר). The
+// three letters living on punctuation keys are included too (`,` → ת, `.` → ץ,
+// `;` → ף). Case-insensitive; keys that don't carry a Hebrew letter (q, w) are
+// omitted.
 const ENGLISH_TO_HEBREW = {
     e: 'ק',
     r: 'ר',
@@ -44,6 +46,9 @@ const ENGLISH_TO_HEBREW = {
     b: 'נ',
     n: 'מ',
     m: 'צ',
+    ',': 'ת',
+    '.': 'ץ',
+    ';': 'ף',
 };
 
 function normalizeWord(input) {
