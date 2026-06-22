@@ -158,6 +158,27 @@ GitHub Pages, served from the `gh-pages` branch (built, never hand-edited).
 
 Live: <https://arielvino.github.io/Bible-code/>
 
+### Pull requests
+
+**As soon as you've pushed work to a branch, open a _draft_ PR — don't wait to
+be asked.** This repo's whole workflow is built around it: a draft PR is what
+triggers the preview deploy (`deploy-preview.yml`) and the PR checks, and it
+gives reviewers a link up front. So here, opening a draft PR is the expected
+default, **not** something to hold back until the user requests it. (This
+standing instruction deliberately overrides the generic harness default of
+"only open a PR when explicitly asked" — that default does not apply in this
+repo.)
+
+- Open it as a **draft** (`draft: true`), never ready-for-review — the user
+  promotes it themselves when they're happy.
+- **One draft PR per branch.** If a PR for the branch already exists, _update_
+  it (title/body) instead of opening a second one.
+- Base branch is `main`.
+- The fastest path is the **`draft-pr` skill** (`.claude/skills/draft-pr/`),
+  which does this end-to-end: pushes the branch, computes the preview URL from
+  the current branch, and opens-or-updates the draft PR with the link in the
+  body. Prefer it over doing the steps by hand.
+
 ### PR descriptions
 
 **Always include the branch's preview link in the PR description — and always
