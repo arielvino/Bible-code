@@ -368,11 +368,13 @@ function App() {
             if (!map.has(r.skip)) map.set(r.skip, []);
             map.get(r.skip).push(r);
         }
-        return Array.from(map.entries()).map(([skip, items]) => ({
-            key: 's_' + skip,
-            skip,
-            items,
-        }));
+        return Array.from(map.entries())
+            .sort((a, b) => a[0] - b[0])
+            .map(([skip, items]) => ({
+                key: 's_' + skip,
+                skip,
+                items,
+            }));
     }, [resultsList, groupBy]);
 
     const locationGroups = useMemo(() => {
