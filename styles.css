@@ -589,3 +589,9 @@ body {
     color: #553c9a;
     font-weight: 600;
 }
+
+.loc-verse {
+    color: #2c7a7b;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}

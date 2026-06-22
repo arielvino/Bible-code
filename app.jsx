@@ -3,9 +3,10 @@ import * as ReactDOM from 'react-dom/client';
 import './styles.css';
 
 // Side-effect imports: each attaches its corpus data to `window`
-// (window.BIBLE_TEXT, window.BIBLE_INDEX, window.ZARATHUSTRA_TEXT, ...).
-import './bible-text.js';
-import './bible-index.js';
+// (window.WLC_TEXT, window.WLC_INDEX, window.ZARATHUSTRA_TEXT, ...).
+import './bible-wlc-text.js';
+import './bible-wlc-index.js';
+import './bible-wlc-verse-index.js';
 import './hebrew-books/zarathustra/text.js';
 import './hebrew-books/zarathustra/index.js';
 
@@ -35,15 +36,18 @@ function sanitizeInput(input) {
 }
 
 const CORPORA = {
-    torah: {
-        id: 'torah',
+    wlc: {
+        id: 'wlc',
         nameHe: 'תורה',
         searchVerb: 'בתורה',
         get text() {
-            return window.BIBLE_TEXT;
+            return window.WLC_TEXT;
         },
         get index() {
-            return window.BIBLE_INDEX;
+            return window.WLC_INDEX;
+        },
+        get verseIndex() {
+            return window.WLC_VERSE_INDEX;
         },
     },
     zarathustra: {
@@ -68,6 +72,62 @@ function lookupLocation(idx, pos) {
         else hi = mid - 1;
     }
     return idx[lo];
+}
+
+// Render a number as a Hebrew numeral (gematria), e.g. 1→א, 15→טו, 24→כד
+// (no geresh/gershayim). Torah perakim go up to 50 and pesukim up to 89.
+const HEB_NUM = [
+    [400, 'ת'],
+    [300, 'ש'],
+    [200, 'ר'],
+    [100, 'ק'],
+    [90, 'צ'],
+    [80, 'פ'],
+    [70, 'ע'],
+    [60, 'ס'],
+    [50, 'נ'],
+    [40, 'מ'],
+    [30, 'ל'],
+    [20, 'כ'],
+    [10, 'י'],
+    [9, 'ט'],
+    [8, 'ח'],
+    [7, 'ז'],
+    [6, 'ו'],
+    [5, 'ה'],
+    [4, 'ד'],
+    [3, 'ג'],
+    [2, 'ב'],
+    [1, 'א'],
+];
+function hebrewNumeral(n) {
+    let out = '';
+    let rem = n;
+    for (const [val, letter] of HEB_NUM) {
+        // 15 and 16 are written טו / טז, never יה / יו (avoid spelling the Name)
+        if (rem === 15) {
+            out += 'טו';
+            rem = 0;
+            break;
+        }
+        if (rem === 16) {
+            out += 'טז';
+            rem = 0;
+            break;
+        }
+        while (rem >= val) {
+            out += letter;
+            rem -= val;
+        }
+    }
+    return out;
+}
+
+// For corpora that carry a verse index, format "perek:pasuk" in Hebrew numerals.
+function lookupVerse(verseIndex, pos) {
+    if (!verseIndex) return null;
+    const v = lookupLocation(verseIndex, pos);
+    return `${hebrewNumeral(v.perek)}:${hebrewNumeral(v.pasuk)}`;
 }
 
 function calcOptions(asked, text) {
@@ -135,12 +195,19 @@ function ResultCard({ result, index, corpus }) {
                     <tbody>
                         {rows.map((row, ri) => {
                             const loc = lookupLocation(corpus.index, row.centerPos);
+                            const verseRef = lookupVerse(corpus.verseIndex, row.centerPos);
                             return (
                                 <tr key={ri}>
                                     <td className="location-cell">
                                         <span className="loc-book">{loc.book}</span>
                                         <span className="loc-dot">·</span>
                                         <span className="loc-parasha">{loc.parasha}</span>
+                                        {verseRef && (
+                                            <>
+                                                <span className="loc-dot">·</span>
+                                                <span className="loc-verse">{verseRef}</span>
+                                            </>
+                                        )}
                                     </td>
                                     {row.cells.map((cell, ci) => (
                                         <td
@@ -161,7 +228,7 @@ function ResultCard({ result, index, corpus }) {
 }
 
 function App() {
-    const [corpusId, setCorpusId] = useState('torah');
+    const [corpusId, setCorpusId] = useState('wlc');
     const corpus = CORPORA[corpusId];
     const [word, setWord] = useState('');
     const [firstSkip, setFirstSkip] = useState(2);
