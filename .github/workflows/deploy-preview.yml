@@ -39,26 +39,52 @@ jobs:
                   git config user.name "github-actions[bot]"
                   git config user.email "github-actions[bot]@users.noreply.github.com"
 
-                  # Check out gh-pages into a worktree, creating it as an orphan
-                  # branch on the first-ever deploy (when it doesn't exist yet).
-                  if git ls-remote --exit-code --heads origin gh-pages >/dev/null 2>&1; then
-                    git fetch origin gh-pages
-                    git worktree add -B gh-pages gh-pages origin/gh-pages
-                  else
-                    git worktree add --detach gh-pages
-                    git -C gh-pages checkout --orphan gh-pages
-                    git -C gh-pages rm -rf . >/dev/null 2>&1 || true
+                  # Publish with a retry loop. The `gh-pages` branch is shared by
+                  # every branch's preview deploy, so a plain push can lose a race
+                  # against a concurrent deploy and leave the tree inconsistent
+                  # (e.g. one build's index.html next to another build's assets).
+                  # Each attempt re-syncs onto the *latest* gh-pages and only ever
+                  # rewrites this branch's own preview/<slug>/, so a rejected push
+                  # just retries cleanly on top of whatever else landed.
+                  published=0
+                  for attempt in 1 2 3 4 5; do
+                    git worktree remove --force gh-pages 2>/dev/null || true
+                    rm -rf gh-pages
+                    git worktree prune
+
+                    if git ls-remote --exit-code --heads origin gh-pages >/dev/null 2>&1; then
+                      git fetch origin gh-pages
+                      git worktree add -B gh-pages gh-pages origin/gh-pages
+                    else
+                      git worktree add --detach gh-pages
+                      git -C gh-pages checkout --orphan gh-pages
+                      git -C gh-pages rm -rf . >/dev/null 2>&1 || true
+                    fi
+
+                    mkdir -p gh-pages/preview/$SLUG
+                    rsync -av --delete \
+                      --exclude='.git' \
+                      dist/ gh-pages/preview/$SLUG/
+
+                    git -C gh-pages add -A
+                    if git -C gh-pages diff --staged --quiet; then
+                      published=1
+                      break
+                    fi
+                    git -C gh-pages commit -m "Preview: ${{ github.ref_name }} @ ${{ github.sha }}"
+                    if git -C gh-pages push origin gh-pages; then
+                      published=1
+                      break
+                    fi
+                    echo "gh-pages advanced under us; retrying in $((attempt * 3))s"
+                    sleep $((attempt * 3))
+                  done
+
+                  git worktree remove --force gh-pages 2>/dev/null || true
+                  if [ "$published" != "1" ]; then
+                    echo "Failed to publish preview after retries" >&2
+                    exit 1
                   fi
-
-                  mkdir -p gh-pages/preview/$SLUG
-                  rsync -av --delete \
-                    --exclude='.git' \
-                    dist/ gh-pages/preview/$SLUG/
-
-                  cd gh-pages
-                  git add -A
-                  git diff --staged --quiet || git commit -m "Preview: ${{ github.ref_name }} @ ${{ github.sha }}"
-                  git push origin gh-pages
 
             - name: Comment preview URL on PR
               env:
