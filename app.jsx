@@ -15,6 +15,37 @@ const { useState, useCallback, useRef, useMemo, useEffect } = React;
 const FINAL_FORMS = { ך: 'כ', ם: 'מ', ן: 'נ', ף: 'פ', ץ: 'צ' };
 const VALID_LETTERS = new Set('אבגדהוזחטיכלמנסעפצקרשת');
 
+// Standard Israeli Hebrew keyboard layout: an English letter is mapped to the
+// Hebrew letter printed on the same physical key, so a user typing on a QWERTY
+// layout still gets the Hebrew letter they mean (e.g. `a`/`A` → ש, `r`/`R` → ר).
+// Case-insensitive; keys that don't carry a Hebrew letter (q, w) are omitted.
+const ENGLISH_TO_HEBREW = {
+    e: 'ק',
+    r: 'ר',
+    t: 'א',
+    y: 'ט',
+    u: 'ו',
+    i: 'ן',
+    o: 'ם',
+    p: 'פ',
+    a: 'ש',
+    s: 'ד',
+    d: 'ג',
+    f: 'כ',
+    g: 'ע',
+    h: 'י',
+    j: 'ח',
+    k: 'ל',
+    l: 'ך',
+    z: 'ז',
+    x: 'ס',
+    c: 'ב',
+    v: 'ה',
+    b: 'נ',
+    n: 'מ',
+    m: 'צ',
+};
+
 function normalizeWord(input) {
     let result = '';
     for (const ch of input) {
@@ -30,7 +61,9 @@ function normalizeWord(input) {
 function sanitizeInput(input) {
     let result = '';
     for (const ch of input) {
-        if (ch in FINAL_FORMS || VALID_LETTERS.has(ch) || /\s/.test(ch)) result += ch;
+        const mapped = ENGLISH_TO_HEBREW[ch.toLowerCase()];
+        if (mapped) result += mapped;
+        else if (ch in FINAL_FORMS || VALID_LETTERS.has(ch) || /\s/.test(ch)) result += ch;
     }
     return result;
 }
