@@ -17,10 +17,11 @@ const VALID_LETTERS = new Set('אבגדהוזחטיכלמנסעפצקרשת');
 
 // Standard Israeli Hebrew keyboard layout: a QWERTY key is mapped to the Hebrew
 // letter printed on the same physical key, so a user typing on a QWERTY layout
-// still gets the Hebrew letter they mean (e.g. `a`/`A` → ש, `r`/`R` → ר). The
-// three letters living on punctuation keys are included too (`,` → ת, `.` → ץ,
-// `;` → ף). Case-insensitive; keys that don't carry a Hebrew letter (q, w) are
-// omitted.
+// still gets the Hebrew letter they mean (e.g. `a`/`A` → ש, `r`/`R` → ר).
+// Case-insensitive; keys that don't carry a Hebrew letter (q, w) are omitted.
+// The three letters that sit on punctuation keys (ת, ץ, ף) can't go here: their
+// characters (`,` `.` `;`) are also produced by a real Hebrew layout, so they're
+// disambiguated by physical key code in KEYCODE_TO_HEBREW instead.
 const ENGLISH_TO_HEBREW = {
     e: 'ק',
     r: 'ר',
@@ -46,10 +47,15 @@ const ENGLISH_TO_HEBREW = {
     b: 'נ',
     n: 'מ',
     m: 'צ',
-    ',': 'ת',
-    '.': 'ץ',
-    ';': 'ף',
 };
+
+// ת, ץ and ף live on the `,` `.` `;` keys of the Israeli layout. We can't map by
+// character (a real Hebrew layout also produces `,`/`.`/`;` from *other* keys),
+// so we key off the physical key (`event.code`): on a Hebrew layout these keys
+// already emit the Hebrew letter directly, so `event.code === 'Comma'` together
+// with `event.key === ','` only happens on a QWERTY layout meaning ת.
+const KEYCODE_TO_HEBREW = { Comma: 'ת', Period: 'ץ', Semicolon: 'ף' };
+const KEYCODE_LATIN_KEY = { Comma: ',', Period: '.', Semicolon: ';' };
 
 function normalizeWord(input) {
     let result = '';
@@ -377,6 +383,35 @@ function App() {
         workersRef.current = spawnedWorkers;
     }, [word, firstSkip, lastSkip, corpus]);
 
+    // Translate the ת/ץ/ף punctuation keys from a QWERTY layout, using the
+    // physical key code so a real Hebrew layout (which emits these letters
+    // directly, and types literal `,`/`.`/`;` from other keys) is left alone.
+    const handleInputKeyDown = useCallback(
+        (e) => {
+            if (e.key === 'Enter') {
+                handleSearch();
+                return;
+            }
+            if (e.ctrlKey || e.metaKey || e.altKey) return;
+            const heb = KEYCODE_TO_HEBREW[e.code];
+            if (!heb || e.key !== KEYCODE_LATIN_KEY[e.code]) return;
+            e.preventDefault();
+            const el = e.target;
+            const start = el.selectionStart ?? el.value.length;
+            const end = el.selectionEnd ?? el.value.length;
+            setWord(sanitizeInput(el.value.slice(0, start) + heb + el.value.slice(end)));
+            const caret = start + heb.length;
+            requestAnimationFrame(() => {
+                try {
+                    el.setSelectionRange(caret, caret);
+                } catch {
+                    /* input may have lost focus */
+                }
+            });
+        },
+        [handleSearch],
+    );
+
     // Cancel any in-flight search and clear results when corpus changes
     const prevCorpusRef = useRef(corpusId);
     useEffect(() => {
@@ -483,7 +518,7 @@ function App() {
                         className="word-input"
                         value={word}
                         onChange={(e) => setWord(sanitizeInput(e.target.value))}
-                        onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                        onKeyDown={handleInputKeyDown}
                         placeholder="לדוגמה: תורה"
                         dir="rtl"
                         autoComplete="off"
