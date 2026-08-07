@@ -158,29 +158,49 @@ GitHub Pages, served from the `gh-pages` branch (built, never hand-edited).
 
 Live: <https://arielvino.github.io/Bible-code/>
 
+### Pull requests
+
+**As soon as you've pushed work to a branch, open a _draft_ PR — don't wait to
+be asked.** This repo's whole workflow is built around it: a draft PR is what
+triggers the preview deploy (`deploy-preview.yml`) and the PR checks, and it
+gives reviewers a link up front. So here, opening a draft PR is the expected
+default, **not** something to hold back until the user requests it. (This
+standing instruction deliberately overrides the generic harness default of
+"only open a PR when explicitly asked" — that default does not apply in this
+repo.)
+
+- Open it as a **draft** (`draft: true`), never ready-for-review — the user
+  promotes it themselves when they're happy.
+- **One draft PR per branch.** If a PR for the branch already exists, _update_
+  it (title/body) instead of opening a second one.
+- Base branch is `main`.
+- The fastest path is the **`draft-pr` skill** (`.claude/skills/draft-pr/`),
+  which does this end-to-end: pushes the branch and opens-or-updates the draft
+  PR. Prefer it over doing the steps by hand.
+
 ### PR descriptions
 
-**Always include the branch's preview link in the PR description — and always
-compute it fresh from the _current_ branch.** Never copy a preview URL from the
-README, a previous PR, or another branch: that is exactly how a stale/wrong
-slug ends up in a description.
+**Don't put the preview link in the PR description — `deploy-preview.yml`
+already posts it.** On every push to a non-`main` branch the workflow's
+"Comment preview URL on PR" step posts `**Preview deployment:** <url>` and
+re-uses a single sticky comment (`gh pr comment --edit-last`), so the link is
+always present, always byte-correct, and never duplicated. Hand-writing it into
+the description on top of that is redundant and risks a stale/wrong slug, so
+leave it out and let the bot own it.
 
-The preview URL is:
+For reference, the URL the workflow posts is:
 
 ```
 https://arielvino.github.io/Bible-code/preview/<slug>/
 ```
 
-`<slug>` must match what `deploy-preview.yml` computes byte-for-byte: the
-branch name with every character **outside** `[A-Za-z0-9._-]` replaced by `-`
-(so `/` → `-`, but dots, underscores and existing hyphens are kept — it is
-**not** "all non-alphanumerics"). Derive it mechanically, don't hand-write it:
+where `<slug>` is the branch name with every character **outside**
+`[A-Za-z0-9._-]` replaced by `-` (so `/` → `-`, but dots, underscores and
+existing hyphens are kept — it is **not** "all non-alphanumerics"), e.g.
+`claude/inspiring-cerf-pq91v5` → `claude-inspiring-cerf-pq91v5`. You normally
+don't need to compute this yourself; if you ever do, derive it mechanically
+rather than hand-writing it:
 
 ```sh
-# preview URL for the branch you're on
 echo "https://arielvino.github.io/Bible-code/preview/$(git rev-parse --abbrev-ref HEAD | sed 's/[^A-Za-z0-9._-]/-/g')/"
 ```
-
-e.g. `claude/inspiring-cerf-pq91v5` → `claude-inspiring-cerf-pq91v5`. The
-workflow also auto-comments this URL on the PR, but include it in the
-description too so reviewers have it up front.
